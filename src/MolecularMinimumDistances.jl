@@ -65,8 +65,10 @@ function minimum_distances(x, n_atoms_per_molecule_x, y, n_atoms_per_molecule_y,
     cl = CellList(x,y,box)
     aux = CellListMap.AuxThreaded(cl)
     cl_data = CellListMapData(box,cl,aux)
-    molecule_of_i = molecule_indices(x,n_atoms_per_molecule_x)
-    molecule_of_j = molecule_indices(y,n_atoms_per_molecule_y)
+    molecule_of_i = molecule_indices(x, n_atoms_per_molecule_x)
+    molecule_of_j = molecule_indices(y, n_atoms_per_molecule_y)
+    x_list = Vector{MinimumDistance}(undef, )
+    y_lis
 
 
 
