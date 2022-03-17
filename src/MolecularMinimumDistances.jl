@@ -1,5 +1,6 @@
 module MolecularMinimumDistances
 
+using Parameters
 using CellListMap
 
 export MinimumDistance
@@ -10,7 +11,7 @@ struct MinimumDistance{T}
     d::T
 end
 
-struct CellListParameters{Box,CellList,AuxThreaded}
+mutable struct CellListMapData{Box,CellList,AuxThreaded}
     box::Box
     cl::CellList
     aux::AuxThreaded
@@ -18,17 +19,17 @@ end
 
 function update_list!(
     i, j, d2,
-    x_molecule_of_atom::AbstractVector{<:Integer},
-    y_molecule_of_atom::AbstractVector{<:Integer},
-    lists::NamedTuple{(:x_list, :y_list), <:Tuple}
+    molecule_of_i::AbstractVector{<:Integer},
+    molecule_of_j::AbstractVector{<:Integer},
+    lists
 )
-    (;x_list, y_list) = lists
+    @unpack x_list, y_list = lists
     d = sqrt(d2)
-    imol = x_molecule_of_atom[i]
+    imol = molecule_of_i[i]
     if d < list[imol].d
         x_list[imol] = MinimumDistance(j,d)
     end
-    jmol = y_molecule_of_atom[j]
+    jmol = molecule_of_j[j]
     if d < list[jmol].d
         y_list[imol] = MinimumDistance(i,d)
     end
@@ -37,23 +38,47 @@ end
 
 function minimum_distances!(
     x, y,
-    x_molecule_of_atom::AbstractVector{<:Integer},
-    y_molecule_of_atom::AbstractVector{<:Integer},
-    list_x::AbstractVector{<:MinimumDistance},
-    list_y::AbstractVector{<:MinimumDistance},
-    cell_list_parameters::CellListMapParameters,
+    molecule_of_i::AbstractVector{<:Integer},
+    molecule_of_j::AbstractVector{<:Integer},
+    x_list::AbstractVector{<:MinimumDistance},
+    y_list::AbstractVector{<:MinimumDistance},
+    cell_list_data::CellListMapData;
+    parallel = true
 )
+    @unpack box, cl, aux = cell_list_parameters
     lists = (x_list = x_list, y_list = y_list)
-    (; box, cl, aux = cell_list_parameters)
+    # Update the cell lists with the new coordinates and box
+    cl = UpdateCellList!(x, y, box, cl, aux)
     map_pairwise!(
-        (x, y, i, j,d2, lists) -> update_list!(i, j, d2, x_molecule_of_atom, y_molecule_of_atom, lists),
-        lists, box, cl, aux
+        (x, y, i, j,d2, lists) -> update_list!(i, j, d2, molecule_of_i, molecule_of_j, lists),
+        lists, box, cl, parallel=parallel
     )
-    return list
+    # Update the data container, for possible reuse
+    cell_list_data.cl = cl
+    call_list_data.aux = aux
+
+    # Return the list of minimum distances
+    return lists
 end
 
+function minimum_distances(x, n_atoms_per_molecule_x, y, n_atoms_per_molecule_y, box)
+    cl = CellList(x,y,box)
+    aux = CellListMap.AuxThreaded(cl)
+    cl_data = CellListMapData(box,cl,aux)
+    molecule_of_i = molecule_indices(x,n_atoms_per_molecule_x)
+    molecule_of_j = molecule_indices(y,n_atoms_per_molecule_y)
 
 
 
+
+end
+
+function molecule_indices(x,n_atoms_per_molecule)  
+    nmols = div(length(x),n_atoms_per_molecule) 
+    return collect(i for i in 1:nmols for j in 1:n_atoms_per_molecule)
+end
 
 end # module
+
+
+
