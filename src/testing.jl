@@ -105,35 +105,45 @@ function plot(type=1)
 
     SVector = CellListMap.SVector
 
+    x = [
+        SVector{2,Float64}( -6, -6),
+        SVector{2,Float64}( -5, -4 ),
+        SVector{2,Float64}( -4, -6 ),
+        SVector{2,Float64}( 4, 4),
+        SVector{2,Float64}( 5, 6 ),
+        SVector{2,Float64}( 6, 4 ),
+    ]
+
+    y = rand(SVector{2,Float64}, 30)
+    for i in 1:2:length(y)
+        y[i] = -10 .+ 20 * y[i]
+        ϕ = rand(0:1e-5:2π)
+        y[i+1] = y[i] + SVector{2,Float64}(sin(ϕ),cos(ϕ))
+    end
+
+    box = Box(limits(x,y),10.)
+
     if type == 1
 
-        x = rand(SVector{2,Float64}, 30)
-        for i in 1:2:length(x)
-            x[i] = -10 .+ 20 * x[i]
-            ϕ = rand(0:1e-5:2π)
-            x[i+1] = x[i] + SVector{2,Float64}(sin(ϕ),cos(ϕ))
-        end
-
-        box = Box(limits(x),10.)
-        x_list = minimum_distances(x, 2, box)
+        y_list = minimum_distances(y, 2, box)
 
         plt = Main.plot()
 
-        for pair in x_list
+        for pair in y_list
             if pair.d < 10. 
-                xline = [ x[pair.i][1], x[pair.j][1] ]
-                yline = [ x[pair.i][2], x[pair.j][2] ]
+                xline = [ y[pair.i][1], y[pair.j][1] ]
+                yline = [ y[pair.i][2], y[pair.j][2] ]
                 Main.plot!(plt, xline, yline, label=:none, color=:black, alpha=0.25)
             end
         end
 
-        for i in 1:2:length(x)
-            xline = [ x[i][1], x[i+1][1] ]
-            yline = [ x[i][2], x[i+1][2] ]
+        for i in 1:2:length(y)
+            xline = [ y[i][1], y[i+1][1] ]
+            yline = [ y[i][2], y[i+1][2] ]
             Main.plot!(plt, xline, yline, label=:none, color=:black, linewidth=2)
         end
 
-        Main.scatter!(plt,Tuple.(x),markercolor=:blue, markersize=5.0, label=:none)
+        Main.scatter!(plt,Tuple.(y),markercolor=:blue, markersize=5.0, label=:none)
 
         Main.plot!(plt, 
             framestyle=:box, 
@@ -146,20 +156,6 @@ function plot(type=1)
 
     if type == 2
 
-        x = [
-            SVector{2,Float64}( -1, -1),
-            SVector{2,Float64}( 0, 1 ),
-            SVector{2,Float64}( 1, -1 ),
-        ]
-
-        y = rand(SVector{2,Float64}, 30)
-        for i in 1:2:length(y)
-            y[i] = -10 .+ 20 * y[i]
-            ϕ = rand(0:1e-5:2π)
-            y[i+1] = y[i] + SVector{2,Float64}(sin(ϕ),cos(ϕ))
-        end
-
-        box = Box(limits(x,y),10.)
         y_list = minimum_distances(y, x, 2, box)
 
         plt = Main.plot()
@@ -172,9 +168,9 @@ function plot(type=1)
             end
         end
 
-        for i in 1:length(x)-1
-            xline = [ x[i][1], x[i+1][1] ]
-            yline = [ x[i][2], x[i+1][2] ]
+        for i in 1:3:length(x)
+            xline = [ x[i][1], x[i+1][1], x[i+2][1] ]
+            yline = [ x[i][2], x[i+1][2], x[i+2][2] ]
             Main.plot!(plt, xline, yline, label=:none, color=:black, linewidth=2)
         end
 
@@ -191,7 +187,52 @@ function plot(type=1)
             framestyle=:box, 
             grid=:false, 
             aspect_ratio=1,
-            lims=[-10,10]
+            lims=[-11,11]
+        )
+
+    end
+    
+    if type == 3
+
+        x_list, y_list = minimum_distances(x, y, 3, 2, box)
+
+        plt = Main.plot()
+
+        for pair in x_list
+            if pair.d < 10. 
+                xline = [ x[pair.i][1], y[pair.j][1] ]
+                yline = [ x[pair.i][2], y[pair.j][2] ]
+                Main.plot!(plt, xline, yline, label=:none, color=:black, alpha=0.5, linestyle=:dash)
+            end
+        end
+        for pair in y_list
+            if pair.d < 10. 
+                xline = [ y[pair.i][1], x[pair.j][1] ]
+                yline = [ y[pair.i][2], x[pair.j][2] ]
+                Main.plot!(plt, xline, yline, label=:none, color=:black, alpha=0.5, linestyle=:dash)
+            end
+        end
+
+        for i in 1:3:length(x)
+            xline = [ x[i][1], x[i+1][1], x[i+2][1] ]
+            yline = [ x[i][2], x[i+1][2], x[i+2][2] ]
+            Main.plot!(plt, xline, yline, label=:none, color=:black, linewidth=2)
+        end
+
+        for i in 1:2:length(y)
+            xline = [ y[i][1], y[i+1][1] ]
+            yline = [ y[i][2], y[i+1][2] ]
+            Main.plot!(plt, xline, yline, label=:none, color=:black, linewidth=2)
+        end
+
+        Main.scatter!(plt,Tuple.(x),markercolor=:red, markersize=5.0, label=:none)
+        Main.scatter!(plt,Tuple.(y),markercolor=:blue, markersize=5.0, label=:none)
+
+        Main.plot!(plt, 
+            framestyle=:box, 
+            grid=:false, 
+            aspect_ratio=1,
+            lims=[-11,11]
         )
 
     end
