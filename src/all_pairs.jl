@@ -32,11 +32,11 @@ function update_list!(
     d = sqrt(d2)
     imol = mol_index_i(i)
     if d < x_list[imol].d
-        x_list[imol] = MinimumDistance(j,d)
+        x_list[imol] = MinimumDistance(i,j,d)
     end
     jmol = mol_index_j(j)
     if d < y_list[jmol].d
-        y_list[jmol] = MinimumDistance(i,d)
+        y_list[jmol] = MinimumDistance(j,i,d)
     end
     return lists
 end

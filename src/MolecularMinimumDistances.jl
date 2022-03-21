@@ -13,19 +13,22 @@ MinimumDistance{T}
 ```
 
 The lists of minimum-distances are stored in arrays of type `Vector{MinimumDistance{T}}`. The index
-of this vector corresponds to the index of the reference atom in the original array.
+of this vector corresponds to the index of the molecule in the original array.
 
-`MinimumDistance{T}` is a simple structure that contains two fields: the index `i` of the atom of the 
-other molecules of that is closer to the reference atom, and the distance `d`, with type `T`, which is
+`MinimumDistance{T}` is a simple structure that contains two fields: the indexes `i` and `j` of the atoms of the 
+molecules that are closer to each other, and the distance `d`, with type `T`, which is
 the same as that of the coordinates of the input vectors of coordinates.
 
 ## Example
 
 ```julia-repl
-julia> md = MinimumDistance{Float32}(5,1.f0)
-MinimumDistance{Float32}(5, 1.0f0)
+julia> md = MinimumDistance{Float32}(2, 5, 1.f0)
+MinimumDistance{Float32}(2, 5, 1.0f0)
 
 julia> md.i
+2
+
+julia> md.j
 5
 
 julia> md.d
@@ -35,6 +38,7 @@ julia> md.d
 """
 struct MinimumDistance{T}
     i::Int
+    j::Int
     d::T
 end
 
@@ -81,9 +85,9 @@ julia> x = [ rand(SVector{2,Float32}) for _ in 1:100 ]; # 50 molecules of 2 atom
 
 julia> init_list(Float32,50)
 50-element Vector{MinimumDistance{Float32}}:
- MinimumDistance{Float32}(-1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
  ⋮
- MinimumDistance{Float32}(-1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
 ```
 
 Providing the vector of coordinates and a function that returns the index of the
@@ -92,9 +96,9 @@ molecule of each element:
 ```julia-repl
 julia> init_list(x, i -> (i-1)÷2 + 1)
 50-element Vector{MinimumDistance{Float32}}:
- MinimumDistance{Float32}(-1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
  ⋮
- MinimumDistance{Float32}(-1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
 ```
 
 The above annonymous function `i -> (i-1)÷2 + 1` is equivalent to `i -> mol_index(i,2)`,
@@ -118,7 +122,7 @@ function init_list(
     return init_list(T,number_of_molecules)
 end
 init_list(::Type{T}, number_of_molecules::Int) where T = 
-    fill(MinimumDistance(-1,typemax(T)),number_of_molecules)
+    fill(MinimumDistance(-1, -1,typemax(T)),number_of_molecules)
 
 # Reduction functions for lists of minimum-distances
 include("./reduction_functions.jl")

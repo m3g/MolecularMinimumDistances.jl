@@ -11,7 +11,7 @@ function update_list_cross!(
     d = sqrt(d2)
     imol = mol_index_i(i)
     if d < list[imol].d
-        list[imol] = MinimumDistance(j,d)
+        list[imol] = MinimumDistance(i,j,d)
     end
     return list
 end

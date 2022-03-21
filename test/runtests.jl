@@ -4,7 +4,7 @@ using CellListMap
 
 using MolecularMinimumDistances
 
-@testset "MolecularMinimumDistances.jl" begin
+@testset "Initalization functions" begin
 
     x = [ rand(SVector{3,Float64}) for _ in 1:12 ]
     #
@@ -15,6 +15,9 @@ using MolecularMinimumDistances
     inds = [ 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 ]
     @test length(init_list(x, i -> inds[i])) == 2
 
+end
+
+@testset "Single set" begin
     # 
     # Single set of molecules
     #
@@ -43,6 +46,10 @@ using MolecularMinimumDistances
         @test x_list ≈ x_list_naive
 
     end
+
+end
+
+@testset "Disjoint: one list" begin
 
     #
     # Disjoint sets: return only one list
@@ -81,6 +88,10 @@ using MolecularMinimumDistances
         @test x_list ≈ x_list_naive
 
     end
+
+end
+
+@testset "Disjoint: two lists" begin
 
     #
     # Disjoint sets of molecules

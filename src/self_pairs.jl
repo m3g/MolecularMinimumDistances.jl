@@ -13,10 +13,10 @@ function update_list!(
     if imol != jmol 
         d = sqrt(d2)
         if d < list[imol].d
-            list[imol] = MinimumDistance(j,d)
+            list[imol] = MinimumDistance(i,j,d)
         end
         if d < list[jmol].d
-            list[jmol] = MinimumDistance(i,d)
+            list[jmol] = MinimumDistance(j,i,d)
         end
     end
     return list
