@@ -3,19 +3,21 @@
 # the list of minimum-distances is between the molecules of a single component.
 #
 function update_list!(
-    i, j, d2,
+    i,
+    j,
+    d2,
     mol_index::F,
-    list::AbstractVector{<:MinimumDistance}
-) where F <: Function
+    list::AbstractVector{<:MinimumDistance},
+) where {F<:Function}
     imol = mol_index(i)
     jmol = mol_index(j)
-    if imol != jmol 
+    if imol != jmol
         d = sqrt(d2)
         if d < list[imol].d
-            list[imol] = MinimumDistance(i,j,d)
+            list[imol] = MinimumDistance(i, j, d)
         end
         if d < list[jmol].d
-            list[jmol] = MinimumDistance(j,i,d)
+            list[jmol] = MinimumDistance(j, i, d)
         end
     end
     return list
@@ -65,13 +67,16 @@ julia> minimum_distances!(i -> mol_index(i,5), list, box, cl)
 function minimum_distances!(
     mol_index::F,
     x_list::AbstractVector{<:MinimumDistance},
-    box, cl;
-    parallel = true
-) where F <: Function
+    box,
+    cl;
+    parallel = true,
+) where {F<:Function}
     map_pairwise!(
         (x, y, i, j, d2, list) -> update_list!(i, j, d2, mol_index, list),
-        x_list, box, cl; 
-        parallel=parallel,
+        x_list,
+        box,
+        cl;
+        parallel = parallel,
         reduce = reduce_list!,
     )
     return x_list
@@ -127,18 +132,17 @@ function minimum_distances(
 See the user guide for further information.
 
 """
-function minimum_distances(
-    x, mol_index::F, box::Box;
-    parallel=true
-) where F<:Function
-    cl = CellList(x,box,parallel=parallel)
+function minimum_distances(x, mol_index::F, box::Box; parallel = true) where {F<:Function}
+    cl = CellList(x, box, parallel = parallel)
     x_list = init_list(x, mol_index)
-    minimum_distances!(
-        mol_index, 
-        x_list, box, cl; parallel=parallel
-    )
+    minimum_distances!(mol_index, x_list, box, cl; parallel = parallel)
     return x_list
 end
 
-minimum_distances(x, n_atoms_per_molecule_x::Int, box::Box; parallel=true) =
-    minimum_distances(x,  i -> mol_index(i,n_atoms_per_molecule_x), box; parallel=parallel)
+minimum_distances(x, n_atoms_per_molecule_x::Int, box::Box; parallel = true) =
+    minimum_distances(
+        x,
+        i -> mol_index(i, n_atoms_per_molecule_x),
+        box;
+        parallel = parallel,
+    )

@@ -12,7 +12,7 @@ Update `list1` considering the list of minimum distances given in `list2`.
 Internal function or structure - interface may change. 
 
 """
-function keep_best_list!(list1,list2)
+function keep_best_list!(list1, list2)
     for i in eachindex(list1)
         if list2[i].d < list1[i].d
             list1[i] = list2[i]

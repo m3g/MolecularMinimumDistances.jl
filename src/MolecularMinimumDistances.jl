@@ -56,7 +56,7 @@ molecules have the same number of atoms. This is the default setting, and the
 in other situations. 
 
 """
-mol_index(i,n_atoms_per_molecule) = (i-1) ÷ n_atoms_per_molecule + 1
+mol_index(i, n_atoms_per_molecule) = (i - 1) ÷ n_atoms_per_molecule + 1
 
 """
 
@@ -113,10 +113,7 @@ The above annonymous function `i -> (i-1)÷2 + 1` is equivalent to `i -> mol_ind
 and can be generalized if the the number of atoms of each molecule is not the same.
 
 """
-function init_list(
-    x::AbstractVector{<:AbstractVector}, 
-    mol_index::F
-) where F<:Function
+function init_list(x::AbstractVector{<:AbstractVector}, mol_index::F) where {F<:Function}
     T = eltype(eltype(x))
     number_of_molecules = 0
     previous_molecule = 0
@@ -127,10 +124,10 @@ function init_list(
             previous_molecule = imol
         end
     end
-    return init_list(T,number_of_molecules)
+    return init_list(T, number_of_molecules)
 end
-init_list(::Type{T}, number_of_molecules::Int) where T = 
-    fill(MinimumDistance(-1, -1,typemax(T)),number_of_molecules)
+init_list(::Type{T}, number_of_molecules::Int) where {T} =
+    fill(MinimumDistance(-1, -1, typemax(T)), number_of_molecules)
 
 # Reduction functions for lists of minimum-distances
 include("./reduction_functions.jl")
@@ -160,6 +157,3 @@ include("./all_pairs.jl")
 include("./testing.jl")
 
 end # MolecularMinimumDistances
-
-
-

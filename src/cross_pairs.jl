@@ -4,14 +4,16 @@
 #
 
 function update_list_cross!(
-    i, j, d2,
+    i,
+    j,
+    d2,
     mol_index_i::F,
-    list::Vector{<:MinimumDistance}
+    list::Vector{<:MinimumDistance},
 ) where {F<:Function}
     d = sqrt(d2)
     imol = mol_index_i(i)
     if d < list[imol].d
-        list[imol] = MinimumDistance(i,j,d)
+        list[imol] = MinimumDistance(i, j, d)
     end
     return list
 end
@@ -76,13 +78,16 @@ julia> y_list
 function minimum_distances!(
     mol_index_i::F,
     x_list::AbstractVector{<:MinimumDistance},
-    box, cl::CellListMap.CellListPair;
-    parallel = true
+    box,
+    cl::CellListMap.CellListPair;
+    parallel = true,
 ) where {F<:Function}
     map_pairwise!(
         (x, y, i, j, d2, x_list) -> update_list_cross!(i, j, d2, mol_index_i, x_list),
-        x_list, box, cl; 
-        parallel=parallel,
+        x_list,
+        box,
+        cl;
+        parallel = parallel,
         reduce = reduce_list!,
     )
     return x_list
@@ -128,15 +133,20 @@ julia> x_list
 
 """
 function minimum_distances(
-    x::AbstractVector, y::AbstractVector, n_atoms_per_molecule_x::Int, box::Box;
-    parallel=true
+    x::AbstractVector,
+    y::AbstractVector,
+    n_atoms_per_molecule_x::Int,
+    box::Box;
+    parallel = true,
 )
-    cl = CellList(x,y,box,parallel=parallel)
-    x_list = init_list(x, i -> mol_index(i,n_atoms_per_molecule_x))
+    cl = CellList(x, y, box, parallel = parallel)
+    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
     minimum_distances!(
-        i -> mol_index(i,n_atoms_per_molecule_x),
-        x_list, box, cl; 
-        parallel=parallel
+        i -> mol_index(i, n_atoms_per_molecule_x),
+        x_list,
+        box,
+        cl;
+        parallel = parallel,
     )
     return x_list
 end

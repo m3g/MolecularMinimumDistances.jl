@@ -22,21 +22,23 @@ Function to update the minimum distance in the case where two lists are being co
 
 """
 function update_list!(
-    i, j, d2,
+    i,
+    j,
+    d2,
     mol_index_i::Fi,
     mol_index_j::Fj,
-    lists::Tuple{T,T}
-) where {Fi<:Function, Fj<:Function, T<:AbstractVector{<:MinimumDistance}}
+    lists::Tuple{T,T},
+) where {Fi<:Function,Fj<:Function,T<:AbstractVector{<:MinimumDistance}}
     x_list = lists[1]
     y_list = lists[2]
     d = sqrt(d2)
     imol = mol_index_i(i)
     if d < x_list[imol].d
-        x_list[imol] = MinimumDistance(i,j,d)
+        x_list[imol] = MinimumDistance(i, j, d)
     end
     jmol = mol_index_j(j)
     if d < y_list[jmol].d
-        y_list[jmol] = MinimumDistance(j,i,d)
+        y_list[jmol] = MinimumDistance(j, i, d)
     end
     return lists
 end
@@ -104,14 +106,17 @@ function minimum_distances!(
     mol_index_j::Fj,
     x_list::AbstractVector{<:MinimumDistance},
     y_list::AbstractVector{<:MinimumDistance},
-    box, cl;
-    parallel = true
-) where {Fi<:Function, Fj<:Function}
+    box,
+    cl;
+    parallel = true,
+) where {Fi<:Function,Fj<:Function}
     lists = (x_list, y_list)
     map_pairwise!(
         (x, y, i, j, d2, lists) -> update_list!(i, j, d2, mol_index_i, mol_index_j, lists),
-        lists, box, cl; 
-        parallel=parallel,
+        lists,
+        box,
+        cl;
+        parallel = parallel,
         reduce = reduce_list_pair!,
     )
     return x_list, y_list
@@ -161,17 +166,24 @@ the atoms.
 
 """
 function minimum_distances(
-    x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int, box::Box;
-    parallel=true
+    x,
+    y,
+    n_atoms_per_molecule_x::Int,
+    n_atoms_per_molecule_y::Int,
+    box::Box;
+    parallel = true,
 )
-    cl = CellList(x,y,box,parallel=parallel)
-    x_list = init_list(x, i -> mol_index(i,n_atoms_per_molecule_x))
-    y_list = init_list(y, i -> mol_index(i,n_atoms_per_molecule_y))
+    cl = CellList(x, y, box, parallel = parallel)
+    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
+    y_list = init_list(y, i -> mol_index(i, n_atoms_per_molecule_y))
     minimum_distances!(
-        i -> mol_index(i,n_atoms_per_molecule_x),
-        j -> mol_index(j,n_atoms_per_molecule_y),
-        x_list, y_list, box, cl; 
-        parallel=parallel
+        i -> mol_index(i, n_atoms_per_molecule_x),
+        j -> mol_index(j, n_atoms_per_molecule_y),
+        x_list,
+        y_list,
+        box,
+        cl;
+        parallel = parallel,
     )
     return x_list, y_list
 end
