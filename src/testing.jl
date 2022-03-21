@@ -1,5 +1,5 @@
 #
-# Testing routines
+# Testing routines: computing the lists with naive algorithms
 #
 
 # For a single set of molecules
@@ -30,7 +30,26 @@ function naive_md(x, n_atoms_per_molecule_x::Int, box::Box)
     return x_list
 end
 
-# For disjoint sets
+# For disjoint sets, returning only one list
+function naive_md(x, y, n_atoms_per_molecule_x::Int, box::Box)
+    x_list = init_list(x, i -> mol_index(i,n_atoms_per_molecule_x))
+    for (i,vx) in pairs(x)
+        for (j,vy) in pairs(y)
+            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
+            d = sqrt(sum(abs2,vy_wrapped - vx))
+            if d > box.cutoff 
+                continue
+            end
+            imol = mol_index(i,n_atoms_per_molecule_x)
+            if d < x_list[imol].d 
+                x_list[imol] = MinimumDistance(j,d)
+            end
+        end
+    end
+    return x_list
+end
+
+# For disjoint sets, returning both lists
 function naive_md(x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int, box::Box)
     x_list = init_list(x, i -> mol_index(i,n_atoms_per_molecule_x))
     y_list = init_list(y, i -> mol_index(i,n_atoms_per_molecule_y))
@@ -54,6 +73,9 @@ function naive_md(x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int
     return x_list, y_list
 end
 
+#
+# Comparison functions
+#
 import Base.isapprox
 function isapprox(
     list1::AbstractVector{<:MinimumDistance},
@@ -75,10 +97,11 @@ function isapprox(
     return true
 end
 
+#
+# Plotting example functions
+#
 function plot(x,y)
     Main.scatter(Tuple.(x))
     Main.scatter(Tuple.(y))
-    
-
-
+    # ... 
 end

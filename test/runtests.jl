@@ -3,14 +3,12 @@ using StaticArrays
 using CellListMap
 
 using MolecularMinimumDistances
-import MolecularMinimumDistances: init_list, mol_index
-import MolecularMinimumDistances: naive_md
 
 @testset "MolecularMinimumDistances.jl" begin
 
     x = [ rand(SVector{3,Float64}) for _ in 1:12 ]
     #
-    # Internal functions
+    # Initialization functions
     #
     @test length(init_list(x, i -> mol_index(i,4))) == 3
     @test length(init_list(Float64, 3)) == 3
@@ -27,7 +25,7 @@ import MolecularMinimumDistances: naive_md
                       0.2 1.0 0.2
                       0.0 0.0 1.0], 0.2) ]
    
-        x_list_naive = naive_md(x,3,box)
+        x_list_naive = MolecularMinimumDistances.naive_md(x,3,box)
 
         x_list = minimum_distances(x,3,box,parallel=false)
         @test x_list ≈ x_list_naive
@@ -47,6 +45,44 @@ import MolecularMinimumDistances: naive_md
     end
 
     #
+    # Disjoint sets: return only one list
+    #
+    x = [ rand(SVector{3,Float64}) for _ in 1:100 ]
+    y = [ rand(SVector{3,Float64}) for _ in 1:90 ]
+
+    for box in [ Box([1,1,1],0.2),
+                 Box([1.0 0.2 0.0
+                      0.2 1.0 0.2
+                      0.0 0.0 1.0], 0.2) ]
+   
+        x_list_naive = MolecularMinimumDistances.naive_md(x,y,5,box)
+
+        x_list = minimum_distances(x,y,5,box,parallel=false)
+        @test x_list ≈ x_list_naive
+
+        x_list = minimum_distances(x,y,5,box,parallel=true)
+        @test x_list ≈ x_list_naive
+
+        cl = CellList(x,y,box,parallel=false)
+        x_list = init_list(x, i -> mol_index(i,5)) 
+        minimum_distances!(
+            i -> mol_index(i,5),
+            x_list,box,cl;
+            parallel=false
+        )
+        @test x_list ≈ x_list_naive
+
+        cl = CellList(x,y,box,parallel=true)
+        minimum_distances!(
+            i -> mol_index(i,5),
+            x_list,box,cl;
+            parallel=true
+        )
+        @test x_list ≈ x_list_naive
+
+    end
+
+    #
     # Disjoint sets of molecules
     #
     x = [ rand(SVector{3,Float64}) for _ in 1:100 ]
@@ -57,7 +93,7 @@ import MolecularMinimumDistances: naive_md
                       0.2 1.0 0.2
                       0.0 0.0 1.0], 0.2) ]
    
-        x_list_naive, y_list_naive = naive_md(x,y,5,3,box)
+        x_list_naive, y_list_naive = MolecularMinimumDistances.naive_md(x,y,5,3,box)
 
         x_list, y_list = minimum_distances(x,y,5,3,box,parallel=false)
         @test x_list ≈ x_list_naive
@@ -91,4 +127,4 @@ import MolecularMinimumDistances: naive_md
 
     end
 
-end
+end # @testset
