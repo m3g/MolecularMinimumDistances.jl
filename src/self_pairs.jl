@@ -2,7 +2,6 @@
 # This file containst the functions for single-sets, that is for those cases where
 # the list of minimum-distances is between the molecules of a single component.
 #
-
 function update_list!(
     i, j, d2,
     mol_index::F,
@@ -49,15 +48,18 @@ julia> box = Box([1,1],0.2f0);
 
 julia> cl = CellList(x,box);
 
-julia> minimum_distances!(i -> mol_index(i,5), init_list(x,5), box, cl)
-20-element Vector{MinimumDistance{Float32}}:
- MinimumDistance{Float32}(79, 0.02097016f0)
- MinimumDistance{Float32}(32, 0.018027343f0)
- ⋮
- MinimumDistance{Float32}(55, 0.013549047f0)
- MinimumDistance{Float32}(61, 0.015638554f0)
-```
+julia> list = init_list(x, i -> mol_index(i,5));
 
+julia> minimum_distances!(i -> mol_index(i,5), list, box, cl)
+20-element Vector{MinimumDistance{Float32}}:
+ MinimumDistance{Float32}(5, 56, 0.033878796f0)
+ MinimumDistance{Float32}(9, 69, 0.009123626f0)
+ MinimumDistance{Float32}(15, 100, 0.054782398f0)
+ ⋮
+ MinimumDistance{Float32}(93, 7, 0.03434341f0)
+ MinimumDistance{Float32}(96, 29, 0.03825064f0)
+
+```
 
 """
 function minimum_distances!(
@@ -100,17 +102,17 @@ julia> x_list = minimum_distances(x, 5, box);
 
 julia> x_list
 20-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(51, 0.048400669109669024)
- MinimumDistance{Float64}(23, 0.08296253778070845)
+ MinimumDistance{Float64}(1, 84, 0.12675823752297105)
+ MinimumDistance{Float64}(9, 20, 0.059338463002696136)
+ MinimumDistance{Float64}(13, 53, 0.035903943974538326)
  ⋮
- MinimumDistance{Float64}(71, 0.04853375996234046)
- MinimumDistance{Float64}(56, 0.03089814908795506)
+ MinimumDistance{Float64}(94, 34, 0.06721955132313923)
+ MinimumDistance{Float64}(99, 86, 0.08788836756712907)
 
 ```
 
-Each entry of the output lists contains, for each atom (in `x` for example), the index of the atom of 
-some other molecule in `x` that is closer to it, and the distance between these atoms. If no atom is found within
-the cutoff of a given atom `MinimumDistance(-1,+inf)` will be returned. 
+Each entry of the output contains the indexes of the atoms involved in the contact, and
+the corresponding distance, for each molecule associated to vector `x` of coordinates.
 
 A more general interface, if the molecules do not have the same number of atoms, allows providing a function 
 that returns the index of each molecule instead of the number of atoms of each molecule:

@@ -86,8 +86,12 @@ julia> x = [ rand(SVector{2,Float32}) for _ in 1:100 ]; # 50 molecules of 2 atom
 julia> init_list(Float32,50)
 50-element Vector{MinimumDistance{Float32}}:
  MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
  ⋮
  MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
+
 ```
 
 Providing the vector of coordinates and a function that returns the index of the
@@ -97,8 +101,12 @@ molecule of each element:
 julia> init_list(x, i -> (i-1)÷2 + 1)
 50-element Vector{MinimumDistance{Float32}}:
  MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
  ⋮
  MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(-1, -1, Inf32)
+
 ```
 
 The above annonymous function `i -> (i-1)÷2 + 1` is equivalent to `i -> mol_index(i,2)`,
