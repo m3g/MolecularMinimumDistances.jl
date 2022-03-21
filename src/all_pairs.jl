@@ -164,8 +164,7 @@ function minimum_distances(
     x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int, box::Box;
     parallel=true
 )
-    parallel ? nbatches = (0,0) : nbatches=(1,1)
-    cl = CellList(x,y,box,nbatches=nbatches)
+    cl = CellList(x,y,box,parallel=parallel)
     x_list = init_list(x, i -> mol_index(i,n_atoms_per_molecule_x))
     y_list = init_list(y, i -> mol_index(i,n_atoms_per_molecule_y))
     minimum_distances!(
