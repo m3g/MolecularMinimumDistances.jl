@@ -111,6 +111,10 @@ julia> @btime MolecularMinimumDistances.naive_md($xwat, $xprot, 3, $box);
 And the computation can be made faster and in-place using the more advanced interface that allows preallocation of all necessary arrays:
 
 ```julia-repl
+julia> list = init_list(xwat, i -> mol_index(i,3)); # 3 atoms per molecule
+
+julia> cl = CellList(xwat,xprot,box);
+
 julia> minimum_distances!(i -> mol_index(i,3), list, box, cl)
 19338-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, -1, -1, Inf)
@@ -139,7 +143,6 @@ julia> @btime minimum_distances!(
   3.473 ms (135 allocations: 7.10 MiB)
 
 ```
-
 
 ## Details of the illustration
 

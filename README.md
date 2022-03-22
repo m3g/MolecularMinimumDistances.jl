@@ -111,6 +111,10 @@ julia> @btime MolecularMinimumDistances.naive_md($xwat, $xprot, 3, $box);
 And the computation can be made faster and in-place using the more advanced interface that allows preallocation of all necessary arrays:
 
 ```julia
+julia> list = init_list(xwat, i -> mol_index(i,3)); # 3 atoms per molecule
+
+julia> cl = CellList(xwat,xprot,box);
+
 julia> minimum_distances!(i -> mol_index(i,3), list, box, cl)
 19338-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, -1, -1, Inf)
@@ -193,4 +197,14 @@ p = plot(lims=(-20,20),framestyle=:box,grid=false,aspect_ratio=1)
 plot_md!(p, x, 2, y, 6, md, y_cycle=true)
 ```
 will produce the illustration plot above, in which the nearest point between the two sets is identified.
+
+# Citation
+
+If this package was useful, please cite the article describing the main
+algorithms on which it is based:
+
+L. Martínez (2022) CellListMap.jl: Efficient and customizable cell list implementation for calculation of pairwise particle properties within a cutoff.
+[https://doi.org/10.48550/arXiv.2202.06427](https://doi.org/10.48550/arXiv.2202.06427)
+
+
 
