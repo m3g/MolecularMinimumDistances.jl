@@ -10,7 +10,7 @@ Here, there is one *blue* molecule, with 6 atoms, and several *red* molecules, w
 
 ## Features
 
-- Fast cell-list approach, to compute minimum-distance for thousands, or millions of atoms. 
+- Fast [cell-list approach](https://github.com/m3g/CellListMap.jl), to compute minimum-distance for thousands, or millions of atoms. 
 - General periodic boundary conditions supported. 
 - Advanced mode for in-place calculations, for non-allocating iterative calls (for analysis of MD trajectories, for example).
 - Modes for the calculation of minimum-distances in sets of molecules.
