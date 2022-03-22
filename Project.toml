@@ -8,11 +8,11 @@ CellListMap = "69e1c6dd-3888-40e6-b3c8-31ac5f578864"
 
 [compat]
 julia = "1.6"
-CellListMap = "0.7.7"
+CellListMap = "0.7.8"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "StaticArrays"]

@@ -106,8 +106,8 @@ function minimum_distances!(
     mol_index_j::Fj,
     x_list::AbstractVector{<:MinimumDistance},
     y_list::AbstractVector{<:MinimumDistance},
-    box,
-    cl;
+    box::Box,
+    cl::CellListMap.CellListPair;
     parallel = true,
 ) where {Fi<:Function,Fj<:Function}
     lists = (x_list, y_list)
@@ -166,13 +166,13 @@ the atoms.
 
 """
 function minimum_distances(
-    x,
-    y,
+    x::AbstractVector{<:AbstractVector{T}},
+    y::AbstractVector{<:AbstractVector{T}},
     n_atoms_per_molecule_x::Int,
     n_atoms_per_molecule_y::Int,
-    box::Box;
+    box::Box{UnitCellType, N, T};
     parallel = true,
-)
+) where {UnitCellType, N, T}
     cl = CellList(x, y, box, parallel = parallel)
     x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
     y_list = init_list(y, i -> mol_index(i, n_atoms_per_molecule_y))
@@ -187,3 +187,40 @@ function minimum_distances(
     )
     return x_list, y_list
 end
+
+"""
+
+```
+function minimum_distances(
+    x::AbstractVector{<:AbstractVector{T}}, 
+    y::AbstractVector{<:AbstractVector{T}}, 
+    n_atoms_per_molecule_x::Int,
+    n_atoms_per_molecule_y::Int,
+    cutoff::T;
+    parallel = true
+) where T
+```
+
+Call defining only a cutoff, assuming that there are no periodic boundary conditions. 
+
+"""
+function minimum_distances(
+    x::AbstractVector{<:AbstractVector{T}}, 
+    y::AbstractVector{<:AbstractVector{T}}, 
+    n_atoms_per_molecule_x::Int,
+    n_atoms_per_molecule_y::Int,
+    cutoff::T;
+    parallel = true
+) where T
+    box = Box(limits(x,y), cutoff)
+    return minimum_distances(
+        x, 
+        y,
+        n_atoms_per_molecule_x,
+        n_atoms_per_molecule_y,
+        box; 
+        parallel = parallel
+    )
+end
+
+

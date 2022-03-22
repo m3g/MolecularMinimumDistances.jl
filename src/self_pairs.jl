@@ -67,8 +67,8 @@ julia> minimum_distances!(i -> mol_index(i,5), list, box, cl)
 function minimum_distances!(
     mol_index::F,
     x_list::AbstractVector{<:MinimumDistance},
-    box,
-    cl;
+    box::Box,
+    cl::CellList;
     parallel = true,
 ) where {F<:Function}
     map_pairwise!(
@@ -132,17 +132,44 @@ function minimum_distances(
 See the user guide for further information.
 
 """
-function minimum_distances(x, mol_index::F, box::Box; parallel = true) where {F<:Function}
+function minimum_distances(
+    x::AbstractVector{<:AbstractVector{T}}, 
+    mol_index::F, 
+    box::Box{UnitCellType,N,T}; 
+    parallel = true
+) where {UnitCellType,N,T,F<:Function}
     cl = CellList(x, box, parallel = parallel)
     x_list = init_list(x, mol_index)
     minimum_distances!(mol_index, x_list, box, cl; parallel = parallel)
     return x_list
 end
 
-minimum_distances(x, n_atoms_per_molecule_x::Int, box::Box; parallel = true) =
-    minimum_distances(
+function minimum_distances(
+    x::AbstractVector{<:AbstractVector{T}}, 
+    n_atoms_per_molecule_x::Int, 
+    box::Box{UnitCellType,N,T}; 
+    parallel = true
+) where {UnitCellType,N,T}
+    return minimum_distances(
         x,
         i -> mol_index(i, n_atoms_per_molecule_x),
         box;
         parallel = parallel,
     )
+end
+
+function minimum_distances(
+    x::AbstractVector{AbstractVector{T}},
+    n_atoms_per_molecule_x::Int,
+    cutoff::T;
+    parallel = true
+) where {T}
+    box = Box(limits(x),cutoff)
+    return minimum_distances(
+        x,
+        i -> mol_index(i, n_atoms_per_molecule_x),
+        box;
+        parallel = parallel,
+    )
+end
+    

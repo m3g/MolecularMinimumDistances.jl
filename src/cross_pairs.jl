@@ -78,7 +78,7 @@ julia> y_list
 function minimum_distances!(
     mol_index_i::F,
     x_list::AbstractVector{<:MinimumDistance},
-    box,
+    box::Box,
     cl::CellListMap.CellListPair;
     parallel = true,
 ) where {F<:Function}
@@ -133,12 +133,12 @@ julia> x_list
 
 """
 function minimum_distances(
-    x::AbstractVector,
-    y::AbstractVector,
+    x::AbstractVector{<:AbstractVector{T}},
+    y::AbstractVector{<:AbstractVector{T}},
     n_atoms_per_molecule_x::Int,
-    box::Box;
+    box::Box{UnitCellType,N,T};
     parallel = true,
-)
+) where {UnitCellType,N,T}
     cl = CellList(x, y, box, parallel = parallel)
     x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
     minimum_distances!(
@@ -150,3 +150,39 @@ function minimum_distances(
     )
     return x_list
 end
+
+"""
+
+```
+function minimum_distances(
+    x::AbstractVector{<:AbstractVector{T}},
+    y::AbstractVector{<:AbstractVector{T}},
+    n_atoms_per_molecule_x::Int,
+    cutoff::T;
+    parallel = true,
+) where {T}
+```
+
+Input only the cutoff, assuming that no periodic boundary conditions are used.
+
+"""
+function minimum_distances(
+    x::AbstractVector{<:AbstractVector{T}},
+    y::AbstractVector{<:AbstractVector{T}},
+    n_atoms_per_molecule_x::Int,
+    cutoff::T;
+    parallel = true,
+) where {T}
+    box = Box(limits(x,y),cutoff)
+    cl = CellList(x, y, box, parallel = parallel)
+    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
+    minimum_distances!(
+        i -> mol_index(i, n_atoms_per_molecule_x),
+        x_list,
+        box,
+        cl;
+        parallel = parallel,
+    )
+    return x_list
+end
+
