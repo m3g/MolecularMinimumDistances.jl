@@ -14,10 +14,10 @@ function update_list!(
     if imol != jmol
         d = sqrt(d2)
         if d < list[imol].d
-            list[imol] = MinimumDistance(i, j, d)
+            list[imol] = MinimumDistance(true, i, j, d)
         end
         if d < list[jmol].d
-            list[jmol] = MinimumDistance(j, i, d)
+            list[jmol] = MinimumDistance(true, j, i, d)
         end
     end
     return list
@@ -54,12 +54,12 @@ julia> list = init_list(x, i -> mol_index(i,5));
 
 julia> minimum_distances!(i -> mol_index(i,5), list, box, cl)
 20-element Vector{MinimumDistance{Float32}}:
- MinimumDistance{Float32}(5, 56, 0.033878796f0)
- MinimumDistance{Float32}(9, 69, 0.009123626f0)
- MinimumDistance{Float32}(15, 100, 0.054782398f0)
+ MinimumDistance{Float32}(true, 5, 56, 0.033878796f0)
+ MinimumDistance{Float32}(true, 9, 69, 0.009123626f0)
+ MinimumDistance{Float32}(true, 15, 100, 0.054782398f0)
  ⋮
- MinimumDistance{Float32}(93, 7, 0.03434341f0)
- MinimumDistance{Float32}(96, 29, 0.03825064f0)
+ MinimumDistance{Float32}(true, 93, 7, 0.03434341f0)
+ MinimumDistance{Float32}(true, 96, 29, 0.03825064f0)
 
 ```
 
@@ -107,12 +107,12 @@ julia> x_list = minimum_distances(x, 5, box);
 
 julia> x_list
 20-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(1, 84, 0.12675823752297105)
- MinimumDistance{Float64}(9, 20, 0.059338463002696136)
- MinimumDistance{Float64}(13, 53, 0.035903943974538326)
+ MinimumDistance{Float64}(true, 1, 84, 0.12675823752297105)
+ MinimumDistance{Float64}(true, 9, 20, 0.059338463002696136)
+ MinimumDistance{Float64}(true, 13, 53, 0.035903943974538326)
  ⋮
- MinimumDistance{Float64}(94, 34, 0.06721955132313923)
- MinimumDistance{Float64}(99, 86, 0.08788836756712907)
+ MinimumDistance{Float64}(true, 94, 34, 0.06721955132313923)
+ MinimumDistance{Float64}(true, 99, 86, 0.08788836756712907)
 
 ```
 

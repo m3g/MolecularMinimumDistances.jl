@@ -15,15 +15,16 @@ MinimumDistance{T}
 The lists of minimum-distances are stored in arrays of type `Vector{MinimumDistance{T}}`. The index
 of this vector corresponds to the index of the molecule in the original array.
 
-`MinimumDistance{T}` is a simple structure that contains two fields: the indexes `i` and `j` of the atoms of the 
+`MinimumDistance{T}` is a simple structure that contains four fields: a boolean marker indicating
+if the distance is within the cutoff, the indexes `i` and `j` of the atoms of the 
 molecules that are closer to each other, and the distance `d`, with type `T`, which is
 the same as that of the coordinates of the input vectors of coordinates.
 
 ## Example
 
 ```julia-repl
-julia> md = MinimumDistance{Float32}(2, 5, 1.f0)
-MinimumDistance{Float32}(2, 5, 1.0f0)
+julia> md = MinimumDistance{Float32}(true, 2, 5, 1.f0)
+MinimumDistance{Float32}(true, 2, 5, 1.0f0)
 
 julia> md.i
 2
@@ -37,6 +38,7 @@ julia> md.d
 
 """
 struct MinimumDistance{T}
+    within_cutoff::Bool
     i::Int
     j::Int
     d::T
@@ -85,12 +87,12 @@ julia> x = [ rand(SVector{2,Float32}) for _ in 1:100 ]; # 50 molecules of 2 atom
 
 julia> init_list(Float32,50)
 50-element Vector{MinimumDistance{Float32}}:
- MinimumDistance{Float32}(-1, -1, Inf32)
- MinimumDistance{Float32}(-1, -1, Inf32)
- MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
  ⋮
- MinimumDistance{Float32}(-1, -1, Inf32)
- MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
 
 ```
 
@@ -100,12 +102,12 @@ molecule of each element:
 ```julia-repl
 julia> init_list(x, i -> (i-1)÷2 + 1)
 50-element Vector{MinimumDistance{Float32}}:
- MinimumDistance{Float32}(-1, -1, Inf32)
- MinimumDistance{Float32}(-1, -1, Inf32)
- MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
  ⋮
- MinimumDistance{Float32}(-1, -1, Inf32)
- MinimumDistance{Float32}(-1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
+ MinimumDistance{Float32}(false, -1, -1, Inf32)
 
 ```
 
@@ -127,7 +129,7 @@ function init_list(x::AbstractVector{<:AbstractVector}, mol_index::F) where {F<:
     return init_list(T, number_of_molecules)
 end
 init_list(::Type{T}, number_of_molecules::Int) where {T} =
-    fill(MinimumDistance(-1, -1, typemax(T)), number_of_molecules)
+    fill(MinimumDistance(false, -1, -1, typemax(T)), number_of_molecules)
 
 # Reduction functions for lists of minimum-distances
 include("./reduction_functions.jl")

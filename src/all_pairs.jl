@@ -34,11 +34,11 @@ function update_list!(
     d = sqrt(d2)
     imol = mol_index_i(i)
     if d < x_list[imol].d
-        x_list[imol] = MinimumDistance(i, j, d)
+        x_list[imol] = MinimumDistance(true, i, j, d)
     end
     jmol = mol_index_j(j)
     if d < y_list[jmol].d
-        y_list[jmol] = MinimumDistance(j, i, d)
+        y_list[jmol] = MinimumDistance(true, j, i, d)
     end
     return lists
 end
@@ -75,9 +75,9 @@ julia> cl = CellList(x,y,box);
 
 julia> x_list = init_list(x, i -> mol_index(i,4)) # 4 atoms per molecule
 3-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(-1, -1, Inf)
- MinimumDistance{Float64}(-1, -1, Inf)
- MinimumDistance{Float64}(-1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
 
 julia> y_list = init_list(y, i -> mol_index(i,10)); # 10 atoms per molecule
 
@@ -85,18 +85,18 @@ julia> minimum_distances!(i -> mol_index(i,4), i -> mol_index(i,10), x_list, y_l
 
 julia> x_list
 3-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(2, 164, 0.005972680538366608)
- MinimumDistance{Float64}(7, 218, 0.004028323450419164)
- MinimumDistance{Float64}(9, 129, 0.0037544428882283045)
+ MinimumDistance{Float64}(true, 2, 164, 0.005972680538366608)
+ MinimumDistance{Float64}(true, 7, 218, 0.004028323450419164)
+ MinimumDistance{Float64}(true, 9, 129, 0.0037544428882283045)
 
 julia> y_list
  80-element Vector{MinimumDistance{Float64}}:
-  MinimumDistance{Float64}(8, 5, 0.04921077224610486)
-  MinimumDistance{Float64}(18, 1, 0.037926586787257126)
-  MinimumDistance{Float64}(30, 5, 0.05198569231679789)
+  MinimumDistance{Float64}(true, 8, 5, 0.04921077224610486)
+  MinimumDistance{Float64}(true, 18, 1, 0.037926586787257126)
+  MinimumDistance{Float64}(true, 30, 5, 0.05198569231679789)
   ⋮
-  MinimumDistance{Float64}(782, 8, 0.0763267983244977)
-  MinimumDistance{Float64}(793, 11, 0.009977954570509984)
+  MinimumDistance{Float64}(true, 782, 8, 0.0763267983244977)
+  MinimumDistance{Float64}(true, 793, 11, 0.009977954570509984)
  
 ```
 
@@ -152,12 +152,12 @@ julia> x_list, y_list = minimum_distances(x, y, 5, 3, box);
 
 julia> x_list
 20-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(5, 40, 0.01820456628585118)
- MinimumDistance{Float64}(6, 60, 0.05884952960926433)
- MinimumDistance{Float64}(13, 8, 0.05877447920481562)
+ MinimumDistance{Float64}(true, 5, 40, 0.01820456628585118)
+ MinimumDistance{Float64}(true, 6, 60, 0.05884952960926433)
+ MinimumDistance{Float64}(true, 13, 8, 0.05877447920481562)
  ⋮
- MinimumDistance{Float64}(93, 9, 0.08781753287405086)
- MinimumDistance{Float64}(96, 44, 0.0915856491615393)
+ MinimumDistance{Float64}(true, 93, 9, 0.08781753287405086)
+ MinimumDistance{Float64}(true, 96, 44, 0.0915856491615393)
 
 ```
 
