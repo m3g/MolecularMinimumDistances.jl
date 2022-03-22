@@ -4,7 +4,7 @@ This package computes the minimum distance between *molecules*, which are repres
 
 To understand the utility and purpose of this package, consider the image below:
 
-![nearest.png](assets/nearest.png)
+![nearest.png](/docs/src/assets/nearest.png)
 
 Here, there is one *blue* molecule, with 6 atoms, and several *red* molecules, with 2 atoms each. The package has identified which are the molecules of the *red* set that have at leat one atom within a cutoff from the atoms of the *blue* molecule, and annotated the corresponding atoms and the distances.
 
