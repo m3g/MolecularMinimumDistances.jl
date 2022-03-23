@@ -71,6 +71,7 @@ function minimum_distances!(
     cl::CellList;
     parallel = true,
 ) where {F<:Function}
+    reset!(x_list)
     map_pairwise!(
         (x, y, i, j, d2, list) -> update_list!(i, j, d2, mol_index, list),
         x_list,

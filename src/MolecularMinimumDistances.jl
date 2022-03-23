@@ -44,6 +44,9 @@ struct MinimumDistance{T}
     d::T
 end
 
+import Base: zero
+zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typemax(T))
+
 """
 
 ```
@@ -128,8 +131,16 @@ function init_list(x::AbstractVector{<:AbstractVector}, mol_index::F) where {F<:
     end
     return init_list(T, number_of_molecules)
 end
+
 init_list(::Type{T}, number_of_molecules::Int) where {T} =
-    fill(MinimumDistance(false, -1, -1, typemax(T)), number_of_molecules)
+    fill(zero(MinimumDistance{T}), number_of_molecules)
+
+function reset!(list::AbstractVector{<:MinimumDistance{T}}) where {T} 
+    for i in eachindex(list)
+        list[i] = zero(MinimumDistance{T})
+    end
+    return list
+end
 
 # Reduction functions for lists of minimum-distances
 include("./reduction_functions.jl")
