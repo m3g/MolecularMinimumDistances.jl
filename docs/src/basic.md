@@ -70,11 +70,9 @@ Using these vectors of coordinates, we will illustrate the use of the current pa
 
 ## Two sets of molecules
 
-### Nearest neighbors
-
 The simplest usage consists of finding for each molecule of one set the atoms of the other set which are closer to them. For example, if we want the atoms of the proteins which are closer to each TMAO molecule (14 atoms), within a cutoff of `12.0` Angstroms, we do:
 
-#### Without periodic boundary conditions
+### Without periodic boundary conditions
 
 ```julia-repl
 julia> list = minimum_distances(tmao, protein, 14, 12.0)
@@ -98,6 +96,53 @@ For instance, the number of molecules of TMAO having a protein atom within the c
 julia> count(x -> x.within_cutoff, list)
 33
 ```
+
+For each molecule of water, he have, similarly:
+
+```julia-repl
+julia> list = minimum_distances(water,protein,3,12.)
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ ⋮
+ MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+
+julia> count(x -> x.within_cutoff, list)
+2251
+```
+
+### With periodic boundary conditions
+
+The example simulation was performed with cubic periodic boundary conditions. Let us provide the box information now. We will exemplify with the calculation of the nearest atoms of the water molecules. The interface here is that define by the `Box` constructor of `CellListMap.jl`, described in detail [here](https://m3g.github.io/CellListMap.jl/stable/pbc/). General periodic boundary conditions are supported. 
+
+The box here is cubic, and we need to provide to the `Box` constructor the sides and the cutoff:
+
+```julia-repl
+julia> box = Box([84.48, 84.48, 84.48], 12.)
+Box{CellListMap.OrthorhombicCell, 3, Float64, Float64, 9}
+  unit cell matrix = [ 84.48, 0.0, 0.0; 0.0, 84.48, 0.0; 0.0, 0.0, 84.48 ]
+  cutoff = 12.0
+  number of computing cells on each dimension = [9, 9, 9]
+  computing cell sizes = [12.06857142857143, 12.06857142857143, 12.06857142857143] (lcell: 1)
+  Total number of cells = 729
+```
+
+And the `minimum_distance` function is called with the `box` instead of the `cutoff`:
+
+```julia-repl
+julia> list = minimum_distances(water,protein,3,box)
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+ ⋮
+ MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
+ MinimumDistance{Float64}(false, -1, -1, Inf)
+```
+
+
 
 
 
