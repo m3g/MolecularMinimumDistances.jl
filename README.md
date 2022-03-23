@@ -28,11 +28,9 @@ This package was designed as the backend for computing [minimum distance distrib
 The most typical scenario is that of a protein, or another macromolecule, in a box of solvent. For example, here we download a frame of a protein which was simulated in a mixture of water and TMAO: 
 
 ```julia
-julia> download( "https://raw.githubusercontent.com/m3g/ComplexMixtures.jl/master/test/data/NAMD/structure.pdb", "/tmp/system.pdb");
-
 julia> using PDBTools
 
-julia> system = readPDB("/tmp/system.pdb")
+julia> system = MolecularMinimumDistances.download_example()
    Array{Atoms,1} with 62026 atoms with fields:
    index name resname chain   resnum  residue        x        y        z  beta occup model segname index_pdb
        1    N     ALA     A        1        1   -9.229  -14.861   -5.481  0.00  1.00     1    PROT         1
