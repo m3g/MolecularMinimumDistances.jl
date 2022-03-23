@@ -79,11 +79,11 @@ The simplest usage consists of finding for each molecule of one set the atoms of
 ```julia-repl
 julia> list = minimum_distances(tmao, protein, 14, 12.0)
 181-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
 ```
 
@@ -104,12 +104,12 @@ For each molecule of water, he have, similarly:
 ```julia-repl
 julia> list = minimum_distances(water,protein,3,12.)
 19338-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
  MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
 
 julia> count(x -> x.within_cutoff, list)
 2251
@@ -136,12 +136,12 @@ And the `minimum_distance` function is called with the `box` instead of the `cut
 ```julia-repl
 julia> list = minimum_distances(water,protein,3,box)
 19338-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
  MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
 ```
 
 ### Advanced, non-allocating call

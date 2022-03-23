@@ -49,9 +49,9 @@ julia> cl = CellList(x,y,box);
 
 julia> x_list = init_list(x, i -> mol_index(i,4)) # 4 atoms per molecule
 3-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
 
 julia> y_list = init_list(y, i -> mol_index(i,10)); # 10 atoms per molecule
 

@@ -73,11 +73,11 @@ julia> box = Box([83.115, 83.044, 83.063], 12.);
 
 julia> md = minimum_distances(xtmao, xprot, 14, box)
 181-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
 
 julia> count(x -> x.within_cutoff, md)
@@ -121,12 +121,12 @@ julia> cl = CellList(xwat,xprot,box);
 
 julia> minimum_distances!(i -> mol_index(i,3), list, box, cl)
 19338-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
  MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
 ```
 
 Allocations occur only for the launching of multiple threads:
@@ -176,11 +176,11 @@ in `x`, and the cutoff up to which we want the distances to be computed:
 julia> md = minimum_distances(x,y,2,10.0)
 40-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(true, 2, 3, 1.0764931248364737)
- MinimumDistance{Float64}(false, -1, -1, Inf)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
  MinimumDistance{Float64}(true, 74, 5, 7.899981412729262)
- MinimumDistance{Float64}(false, -1, -1, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
 ```
 
 The output is a list of `MinimumDistance` data structures, one for each molecule in `x`. The `true` indicates that a distance smaller than the cutoff was found, and for these the indexes of the atoms in `x` and `y` associated are reported, along with the distance between them.
