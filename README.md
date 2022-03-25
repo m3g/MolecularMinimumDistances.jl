@@ -45,7 +45,7 @@ julia> system = MolecularMinimumDistances.download_example()
 Next, we extract the protein coordinates, and the TMAO coordinates:
 
 ```julia
-julia> xprot = coor(system,"protein")
+julia> protein = coor(system,"protein")
 1463-element Vector{SVector{3, Float64}}:
  [-9.229, -14.861, -5.481]
  [-10.048, -15.427, -5.569]
@@ -54,7 +54,7 @@ julia> xprot = coor(system,"protein")
  [6.408, -12.034, -8.343]
  [6.017, -10.967, -9.713]
 
-julia> xtmao = coor(system,"resname TMAO")
+julia> tmao = coor(system,"resname TMAO")
 2534-element Vector{SVector{3, Float64}}:
  [-23.532, -9.347, 19.545]
  [-23.567, -7.907, 19.381]
@@ -71,7 +71,7 @@ Finally, we find all the TMAO molecules having at least one atom closer than 12 
 ```julia
 julia> box = Box([83.115, 83.044, 83.063], 12.);
 
-julia> md = minimum_distances(xtmao, xprot, 14, box)
+julia> list = minimum_distances(tmao, protein, 14, box)
 181-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
@@ -80,7 +80,7 @@ julia> md = minimum_distances(xtmao, xprot, 14, box)
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
 
-julia> count(x -> x.within_cutoff, md)
+julia> count(x -> x.within_cutoff, list)
 33
 ```
 
@@ -90,7 +90,7 @@ Thus, 33 TMAO molecules are within the cutoff distance from the protein, and the
 
 This package exists because this computation is fast. For example, let us choose the water molecules instead, and benchmark the time required to compute these set of distances:
 ```julia
-julia> xwat = coor(system,"resname TIP3")
+julia> water = coor(system,"resname TIP3")
 58014-element Vector{SVector{3, Float64}}:
  [-28.223, 19.92, -27.748]
  [-27.453, 20.358, -27.476]
@@ -101,25 +101,29 @@ julia> xwat = coor(system,"resname TIP3")
 
 julia> using BenchmarkTools
 
-julia> @btime minimum_distances($xwat, $xprot, 3, $box);
+julia> @btime minimum_distances($water, $protein, 3, $box);
   4.726 ms (2748 allocations: 11.82 MiB)
 ```
 
 To compare, a naive algorithm to compute the same thing takes:
 
 ```julia
-julia> @btime MolecularMinimumDistances.naive_md($xwat, $xprot, 3, $box);
+julia> @btime MolecularMinimumDistances.naive_md($water, $protein, 3, $box);
   911.580 ms (2 allocations: 604.36 KiB)
 ```
 
 And the computation can be made faster and in-place using the more advanced interface that allows preallocation of all necessary arrays:
 
 ```julia
-julia> list = init_list(xwat, i -> mol_index(i,3)); # 3 atoms per molecule
+julia> using CellListMap
 
-julia> cl = CellList(xwat,xprot,box);
+julia> list = init_list(water, i -> mol_index(i,3)); # 3 atoms per molecule
 
-julia> minimum_distances!(i -> mol_index(i,3), list, box, cl)
+julia> cl = CellList(water,protein,box);
+
+julia> list_threaded = [ copy(list) for i in 1:nbatches(cl) ];
+
+julia> minimum_distances!(i -> mol_index(i,3), list, box, cl; list_threaded = list_threaded)
 19338-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
@@ -134,20 +138,19 @@ Allocations occur only for the launching of multiple threads:
 ```julia
 julia> @btime minimum_distances!(
            $(i -> mol_index(i,3)), 
-           $list, $box, $cl, 
+           $list, $box, $cl; 
            parallel = false
         );
   12.723 ms (0 allocations: 0 bytes)
 
 julia> @btime minimum_distances!(
           $(i -> mol_index(i,3)), 
-          $list, $box, $cl,
+          $list, $box, $cl;
+          list_threaded = $list_threaded,
           parallel = true # default
         );
-  3.473 ms (135 allocations: 7.10 MiB)
-
+  3.473 ms (76 allocations: 9.75 KiB)
 ```
-
 
 ## Details of the illustration
 
@@ -155,6 +158,7 @@ The initial illustration here consists of a toy solute-solvent example, where th
 
 ```julia
 using MolecularMinimumDistances, StaticArrays
+T = SVector{2,Float64}
 # x will contain the "solvent", composed by 40 diatomic molecules
 x = T[]
 cmin = T(-20,-20)
@@ -173,7 +177,7 @@ and the solute. In the input we need to specify the number of atoms of each mole
 in `x`, and the cutoff up to which we want the distances to be computed:
 
 ```julia
-julia> md = minimum_distances(x,y,2,10.0)
+julia> list = minimum_distances(x,y,2,10.0)
 40-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(true, 2, 3, 1.0764931248364737)
  MinimumDistance{Float64}(false, 0, 0, Inf)
@@ -188,7 +192,7 @@ The output is a list of `MinimumDistance` data structures, one for each molecule
 In this example, from the 40 molecules of `x`, eleven had atoms closer than the cutoff to some
 atom of `y`:
 ```julia
-julia> count(x -> x.within_cutoff, md)
+julia> count(x -> x.within_cutoff, list)
 11
 ```
 
@@ -198,7 +202,7 @@ We have an auxiliary function to plot the result, in this case where the "atoms"
 using Plots
 import MolecularMinimumDistances: plot_md!
 p = plot(lims=(-20,20),framestyle=:box,grid=false,aspect_ratio=1)
-plot_md!(p, x, 2, y, 6, md, y_cycle=true)
+plot_md!(p, x, 2, y, 6, list, y_cycle=true)
 ```
 will produce the illustration plot above, in which the nearest point between the two sets is identified.
 
