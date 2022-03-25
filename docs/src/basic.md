@@ -37,10 +37,10 @@ The system consists of a protein (with 1463 atoms), solvated by 181 TMAO molecul
 
 This is a snapshot of a simulation which was performed with cubic periodic boundary conditions, with a box side of `84.48` Angstrom. We will use periodic boundary conditions in the examples. 
 
-The coordinates of each of the types of molecules can be extracted from the `system` array of atoms with (using `PDBTools`):
+The coordinates of each of the types of molecules can be extracted from the `system` array of atoms with (using `PDBTools` - v0.13 or greater):
 
 ```julia-repl
-julia> xprot = coor(system,"protein")
+julia> protein = coor(system,"protein")
 1463-element Vector{StaticArrays.SVector{3, Float64}}:
  [-9.229, -14.861, -5.481]
  [-10.048, -15.427, -5.569]
@@ -70,9 +70,14 @@ julia> water = coor(system,"water")
 
 Using these vectors of coordinates, we will illustrate the use of the current package.
 
-## Two sets of molecules
+## Shortest distances from a solute
 
 The simplest usage consists of finding for each molecule of one set the atoms of the other set which are closer to them. For example, if we want the atoms of the proteins which are closer to each TMAO molecule (14 atoms), within a cutoff of `12.0` Angstroms, we do:
+
+!!! note
+    If the solute has more than one molecule, this will not be taken into 
+    consideration in this mode. All molecules will be considered as part
+    of the same structure (the number of atoms per molecule of the `protein` is not a parameter here).
 
 ### Without periodic boundary conditions
 
@@ -115,6 +120,12 @@ julia> count(x -> x.within_cutoff, list)
 2251
 ```
 
+A pictorial representatio of this result, for a simpler system, is:
+
+![solute-solvent](./assets/nearest.png)
+
+This figure illustrate that all distances between the solute (blue) and the closet atoms of each solvent molecule (red) were found, within the desired cutoff. 
+
 ### With periodic boundary conditions
 
 The example simulation was performed with cubic periodic boundary conditions. Let us provide the box information now. We will exemplify with the calculation of the nearest atoms of the water molecules. The interface here is that define by the `Box` constructor of `CellListMap.jl`, described in detail [here](https://m3g.github.io/CellListMap.jl/stable/pbc/). General periodic boundary conditions are supported. 
@@ -144,23 +155,70 @@ julia> list = minimum_distances(water,protein,3,box)
  MinimumDistance{Float64}(false, 0, 0, Inf)
 ```
 
-### Advanced, non-allocating call
+## All shortest distances
 
-If this function will be called from within a loop where the coordinates of the molecules involved change, a faster and non-allocating call can be used, by exposing the interface of `CellListMap`. For example:
+A similar call of the previous section can be used to compute, for each molecule of a set of molecules, which is the closest atom
+of every other molecule of another set. 
+
+In the example, we can compute for each TMAO molecule, which is the closest atom of water, and vice-versa. The difference from the previous call
+is that now wee need to provide the number of atoms of both TMAO and water:
 
 ```julia-repl
-julia> function iterate_lists(nsteps, list, water, protein, box, cl, aux)
-           inds(i) = mol_index(i,3)
-           for i in 1:nsteps
-               # water and protein coordinates, and box, could change here
-               cl = UpdateCellList!(water, protein, box, cl, aux)
-               minimum_distances!(inds, list, box, cl)
-               # list was updated
-           end
-        end
+julia> water_list, tmao_list = minimum_distances(water, tmao, 3, 14, box);
 
+julia> water_list
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 2, 1512, 4.779476331147592)
+ MinimumDistance{Float64}(true, 6, 734, 2.9413928673334357)
+ MinimumDistance{Float64}(true, 8, 859, 5.701548824661595)
+ ⋮
+ MinimumDistance{Float64}(true, 58010, 1728, 3.942870781549911)
+ MinimumDistance{Float64}(true, 58014, 2058, 2.2003220218867936)
 
+julia> tmao_list
+181-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 12, 22520, 2.1985345118965056)
+ MinimumDistance{Float64}(true, 20, 33586, 2.1942841657360606)
+ MinimumDistance{Float64}(true, 37, 26415, 2.1992319113726926)
+ ⋮
+ MinimumDistance{Float64}(true, 2512, 37323, 2.198738501959709)
+ MinimumDistance{Float64}(true, 2527, 33664, 2.1985044916943015)
 ```
+
+Two lists were returned, the first containing, for each water molecule, `MinimumDistance` data associated to the closest TMAO molecule
+(meaning the atoms involved in the contact and their distance). Similary, the second list contains, for each TMAO molecule, the `MinimumDistance` data associated to each TMAO molecule. 
+
+## Shortest distances within molecules
+
+There is an interface to compute the shortest distance *within* a set of molecules. That is, given one group of molecules, compute for each molecule which is the shortest distance among the other molecules of the same type. 
+
+A typical call would be:
+
+```julia-repl
+julia> list = minimum_distances(water, 3, box)
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 2, 33977, 2.1997806708851724)
+ MinimumDistance{Float64}(true, 4, 43684, 2.1994928961012814)
+ MinimumDistance{Float64}(true, 9, 28030, 2.1997583958244142)
+ ⋮
+ MinimumDistance{Float64}(true, 58010, 22235, 2.1992096307537414)
+ MinimumDistance{Float64}(true, 58012, 9318, 2.20003227249056)
+```
+
+Which contains for each water molecule the atoms involved in the closest contact to any other water molecule, and the distances (within the cutoff).
+A pictorial representation of a result of this type is, for a simpler system:
+
+![self pairs](./assets/self_pair.png)
+
+This can be used for the identification of connectivity networks, for example, or for some types of clustering.
+
+!!! note
+    All the function accept either a `cutoff` (a `Real` value) or a `Box` in the same argument positions. If the cutoff only is provided, it is assumed that no periodic boundary conditions are used. 
+
+
+
+
+
 
 
 
