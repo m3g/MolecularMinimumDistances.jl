@@ -8,7 +8,7 @@ function update_list_cross!(
     j,
     d2,
     mol_index_i::F,
-    list::Vector{<:MinimumDistance},
+    list::List,
 ) where {F<:Function}
     d = sqrt(d2)
     imol = mol_index_i(i)
@@ -53,9 +53,18 @@ julia> x_list = init_list(x, i -> mol_index(i,4)) # 4 atoms per molecule
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
 
-julia> y_list = init_list(y, i -> mol_index(i,10)); # 10 atoms per molecule
+julia> x_list = init_list(y, i -> mol_index(i,10)); # 10 atoms per molecule
 
-julia> minimum_distances!(i -> mol_index(i,4), i -> mol_index(i,10), x_list, y_list, box, cl);
+julia> x_list_threaded = [ copy(y_list) for _ in 1:nbatches(cl) ]
+
+julia> minimum_distances!(
+           i -> mol_index(i,4), 
+           x_list, 
+           y,
+           box, 
+           cl;
+           list_threaded = y_list_threaded
+       );
 
 julia> x_list
 3-element Vector{MinimumDistance{Float64}}:
@@ -63,26 +72,19 @@ julia> x_list
  MinimumDistance{Float64}(true, 7, 415, 0.007128399163692169)
  MinimumDistance{Float64}(true, 9, 511, 0.0033074993141050577)
 
-julia> y_list
-80-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(true, 10, 11, 0.015032910410462463)
- MinimumDistance{Float64}(true, 16, 7, 0.025198239285666908)
- MinimumDistance{Float64}(true, 27, 4, 0.02006220925909916)
- ⋮
- MinimumDistance{Float64}(true, 787, 11, 0.034239040614140855)
- MinimumDistance{Float64}(true, 797, 7, 0.026912200186074015)
-
 ```
 
 """
 function minimum_distances!(
     mol_index_i::F,
-    x_list::AbstractVector{<:MinimumDistance},
+    x_list::List,
     box::Box,
     cl::CellListMap.CellListPair;
     parallel = true,
+    list_threaded = nothing, 
 ) where {F<:Function}
     reset!(x_list)
+    reset!(list_threaded)
     map_pairwise!(
         (x, y, i, j, d2, x_list) -> update_list_cross!(i, j, d2, mol_index_i, x_list),
         x_list,
@@ -90,6 +92,7 @@ function minimum_distances!(
         cl;
         parallel = parallel,
         reduce = reduce_list!,
+        output_threaded = list_threaded
     )
     return x_list
 end

@@ -28,7 +28,7 @@ function update_list!(
     mol_index_i::Fi,
     mol_index_j::Fj,
     lists::Tuple{T,T},
-) where {Fi<:Function,Fj<:Function,T<:AbstractVector{<:MinimumDistance}}
+) where {Fi<:Function,Fj<:Function,T<:List}
     x_list = lists[1]
     y_list = lists[2]
     d = sqrt(d2)
@@ -104,14 +104,16 @@ julia> y_list
 function minimum_distances!(
     mol_index_i::Fi,
     mol_index_j::Fj,
-    x_list::AbstractVector{<:MinimumDistance},
-    y_list::AbstractVector{<:MinimumDistance},
+    x_list::List,
+    y_list::List,
     box::Box,
     cl::CellListMap.CellListPair;
     parallel = true,
+    lists_threaded = nothing
 ) where {Fi<:Function,Fj<:Function}
     reset!(x_list)
     reset!(y_list)
+    reset!(lists_threaded)
     lists = (x_list, y_list)
     map_pairwise!(
         (x, y, i, j, d2, lists) -> update_list!(i, j, d2, mol_index_i, mol_index_j, lists),
@@ -120,6 +122,7 @@ function minimum_distances!(
         cl;
         parallel = parallel,
         reduce = reduce_list_pair!,
+        output_threaded = lists_threaded
     )
     return x_list, y_list
 end

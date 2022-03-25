@@ -43,9 +43,11 @@ struct MinimumDistance{T}
     j::Int
     d::T
 end
-
 import Base: zero
 zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typemax(T))
+
+# Simplify the type signature of lists
+const List{T} = AbstractVector{<:MinimumDistance{T}}
 
 """
 
@@ -135,11 +137,37 @@ end
 init_list(::Type{T}, number_of_molecules::Int) where {T} =
     fill(zero(MinimumDistance{T}), number_of_molecules)
 
-function reset!(list::AbstractVector{<:MinimumDistance{T}}) where {T} 
+#
+# Reset list functions
+#
+reset!(::Nothing) = nothing
+
+function reset!(list::List{T}) where {T} 
     for i in eachindex(list)
         list[i] = zero(MinimumDistance{T})
     end
-    return list
+    return nothing
+end
+
+function reset!(list_threaded::AbstractVector{<:List})
+    for i in eachindex(list_threaded)
+        reset!(list_threaded[i])
+    end
+    return nothing
+end
+
+function reset!(lists::Tuple{T,T}) where T<:List
+    reset!(lists[1])
+    reset!(lists[2])
+    return nothing
+end
+
+function reset!(list_threaded::AbstractVector{Tuple{T,T}}) where T<:List
+    for list_tuple in list_threaded
+        reset!(list_tuple[1])
+        reset!(list_tuple[2])
+    end
+    return nothing
 end
 
 # Reduction functions for lists of minimum-distances

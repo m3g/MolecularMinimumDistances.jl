@@ -7,7 +7,7 @@ function update_list!(
     j,
     d2,
     mol_index::F,
-    list::AbstractVector{<:MinimumDistance},
+    list::List,
 ) where {F<:Function}
     imol = mol_index(i)
     jmol = mol_index(j)
@@ -30,14 +30,16 @@ function minimum_distances!(
     mol_index::F,
     x_list::AbstractVector{<:MinimumDistance},
     box, cl;
-    parallel = true
+    parallel = true,
+    list_threaded = nothing
 ) where F <: Function
 ```
 
 Compute the list of minimum distances given the precomputed cell lists, auxiliary vectors, and 
 lists of indexes of molecules of each atom. Should be preferred for multiple calls of this function,
 with the outer update of the cell lists. The `mol_index` function must return, for each atom index,
-the corresponding molecular index. 
+the corresponding molecular index. To obtain faster an minimally-allocating calls, 
+preallocate the `list_threaded` variable.
 
 # Examples
 
@@ -51,6 +53,8 @@ julia> box = Box([1,1],0.2f0);
 julia> cl = CellList(x,box);
 
 julia> list = init_list(x, i -> mol_index(i,5));
+
+julia> list_threaded = [ copy(list) for _ in 1:nbatches(cl) ]
 
 julia> minimum_distances!(i -> mol_index(i,5), list, box, cl)
 20-element Vector{MinimumDistance{Float32}}:
@@ -66,12 +70,14 @@ julia> minimum_distances!(i -> mol_index(i,5), list, box, cl)
 """
 function minimum_distances!(
     mol_index::F,
-    x_list::AbstractVector{<:MinimumDistance},
+    x_list::List,
     box::Box,
     cl::CellList;
     parallel = true,
+    list_threaded = nothing
 ) where {F<:Function}
     reset!(x_list)
+    reset!(list_threaded)
     map_pairwise!(
         (x, y, i, j, d2, list) -> update_list!(i, j, d2, mol_index, list),
         x_list,
@@ -79,6 +85,7 @@ function minimum_distances!(
         cl;
         parallel = parallel,
         reduce = reduce_list!,
+        output_threaded = list_threaded
     )
     return x_list
 end

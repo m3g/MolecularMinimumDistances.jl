@@ -78,8 +78,8 @@ end
 #
 import Base.isapprox
 function isapprox(
-    list1::AbstractVector{<:MinimumDistance},
-    list2::AbstractVector{<:MinimumDistance},
+    list1::List,
+    list2::List,
 )
     length(list1) != length(list2) && return false
     for i in eachindex(list1)
@@ -93,7 +93,7 @@ end
 function isapprox(
     lists1::Tuple{T,T},
     lists2::Tuple{T,T},
-) where {T<:AbstractVector{<:MinimumDistance}}
+) where {T<:List}
     !(lists1[1] ≈ lists2[1]) && return false
     !(lists1[2] ≈ lists2[2]) && return false
     return true
@@ -154,7 +154,7 @@ function plot_md!(
     n_atoms_per_molecule_x::Int,
     y, 
     n_atoms_per_molecule_y::Int,
-    md::AbstractVector{<:MinimumDistance};
+    md::List;
     x_cycle=false,
     y_cycle=false
 )
@@ -170,3 +170,17 @@ end
 
 download_example() =
     Main.PDBTools.readPDB(download("https://raw.githubusercontent.com/m3g/ComplexMixtures.jl/master/test/data/NAMD/structure.pdb"))
+
+
+inds(i) = mol_index(i,3)
+function iterate_lists(nsteps, list, list_threaded, water, protein, box, cl, aux; parallel = true)
+   for i in 1:nsteps
+       # water and protein coordinates, and box, could change here
+       cl = UpdateCellList!(water, protein, box, cl, aux; parallel = parallel)
+       minimum_distances!(inds, list, box, cl; 
+           parallel = parallel,
+           list_threaded = list_threaded
+       )
+       # list was updated
+   end
+end
