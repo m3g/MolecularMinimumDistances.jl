@@ -76,10 +76,7 @@ using MolecularMinimumDistances
 using CellListMap # required
 using PDBTools # example
 
-function iterate_lists(nsteps, water, protein)
-    # Load example coordinates
-    # Build initial system and cell lists
-    box = Box([84.48, 84.48, 84.48], 12.)
+function iterate_lists(nsteps, water, protein, box)
     cl = CellList(protein,water,box)
     # Function that given the index of the atom, returns the index of the molecule. Here, all molecules are similar, and we use the standard `mol_index` function:
     water_index(i) = mol_index(i,3)
@@ -110,24 +107,25 @@ julia> water = coor(system, "water"); # water coordinates
 
 julia> protein = coor(system, "protein"); # protein coordinates
 
-julia> @btime iterate_lists(10, $water, $protein)
+julia> box = Box([84.48, 84.48, 84.48], 12.);
+
+julia> @btime iterate_lists(10, $water, $protein, $box)
   1.113 s (21471 allocations: 36.42 MiB)
 
-julia> @btime iterate_lists(100, $water, $protein)
+julia> @btime iterate_lists(100, $water, $protein, $box)
   13.568 s (37946 allocations: 38.36 MiB)
 ```
 
 In fact, if we opted to run the calculation in serial, with:
 
 ```julia
-function iterate_lists_serial(nsteps, water, protein)
-    box = Box([84.48, 84.48, 84.48], 12.)
+function iterate_lists_serial(nsteps, water, protein, box)
     cl = CellList(protein,water,box, parallel=false)
     water_index(i) = mol_index(i,3)
     list = init_list(water, water_index)
     for i in 1:nsteps
         cl = UpdateCellList!(water, protein, box, cl, parallel=false)
-        minimum_distances!( water_index, list, box, cl, parallel=false) 
+        minimum_distances!(water_index, list, box, cl, parallel=false) 
         # Perform whatever futher analysis using the `list` of minimum distances.
     end
 end
@@ -136,11 +134,11 @@ end
 We can see that the updating of the cell lists and the computation of the minimum-distance lists is completely allocation free, such that the loop is allocation free:
 
 ```julia-repl
-julia> @btime iterate_lists_serial(10, $water, $protein)
-  5.038 s (1925 allocations: 14.43 MiB)
+julia> @btime iterate_lists_serial(10, $water, $protein, $box)
+  7.989 s (1797 allocations: 14.42 MiB)
 
-julia> @btime iterate_lists_serial(20, $water, $protein)
-  11.613 s (1955 allocations: 14.43 MiB)
+julia> @btime iterate_lists_serial(20, $water, $protein, $box)
+  16.716 s (1797 allocations: 14.42 MiB)
 ```
 
 Thus, using a parallelization scheme at a upper level can be also an alternative.
