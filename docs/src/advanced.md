@@ -143,3 +143,7 @@ julia> @btime iterate_lists_serial(20, $water, $protein, $box)
 
 Thus, using a parallelization scheme at a upper level can be also an alternative.
 
+!!! note
+    The `Box` constructor is type-unstable because of the different possible dimensions and unit cells. This instability does not propagate to inner functions and is, thus, benign, but to avoid completely allocations in a loop using a predefined box, a function barrier may be required. 
+
+
