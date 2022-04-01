@@ -135,7 +135,7 @@ end
 
 We can see that the updating of the cell lists and the computation of the minimum-distance lists is completely allocation free, such that the loop is allocation free:
 
-```
+```julia-repl
 julia> @btime iterate_lists_serial(10, $water, $protein)
   5.038 s (1925 allocations: 14.43 MiB)
 
