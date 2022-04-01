@@ -144,7 +144,7 @@ julia> @btime minimum_distances!(
 
 ## Details of the illustration
 
-The initial illustration here consists of a toy solute-solvent example, where the solute is a approximatelly hexagonal molecule, and the solvent is composed by 40 diatomic molecules. The toy system is built as follows:
+The initial illustration here consists of a toy solute-solvent example, where the solute is a approximately hexagonal molecule, and the solvent is composed by 40 diatomic molecules. The toy system is built as follows:
 
 ```julia
 using MolecularMinimumDistances, StaticArrays

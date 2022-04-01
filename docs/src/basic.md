@@ -120,7 +120,7 @@ julia> count(x -> x.within_cutoff, list)
 2251
 ```
 
-A pictorial representatio of this result, for a simpler system, is:
+A pictorial representation of this result, for a simpler system, is:
 
 ![solute-solvent](./assets/nearest.png)
 
@@ -186,11 +186,11 @@ julia> tmao_list
 ```
 
 Two lists were returned, the first containing, for each water molecule, `MinimumDistance` data associated to the closest TMAO molecule
-(meaning the atoms involved in the contact and their distance). Similary, the second list contains, for each TMAO molecule, the `MinimumDistance` data associated to each TMAO molecule. 
+(meaning the atoms involved in the contact and their distance). Similarly, the second list contains, for each TMAO molecule, the `MinimumDistance` data associated to each TMAO molecule. 
 
 ## Shortest distances within molecules
 
-There is an interface to compute the shortest distance *within* a set of molecules. That is, given one group of molecules, compute for each molecule which is the shortest distance among the other molecules of the same type. 
+There is an interface to compute the shortest distances of molecules within a set of molecules. That is, given one group of molecules, compute for each molecule which is the shortest distance among the other molecules of the same type. 
 
 A typical call would be:
 

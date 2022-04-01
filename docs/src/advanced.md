@@ -2,7 +2,7 @@
 
 ## Array preallocation
 
-Thea advanced usage of this package exposes the interface of `CellListMap`, such that it is possible to iterate through sets varying coordinates and perhaps box types without need for reallocating lists of neighbors every time.  
+The advanced usage of this package exposes the interface of `CellListMap`, such that it is possible to iterate through sets varying coordinates and perhaps box types without need for reallocating lists of neighbors every time.  
 
 Basically, preallocation is needed for:
 
@@ -67,7 +67,7 @@ julia> my_mol_index(5)
 
 In summary, this function that given the index of the atom returns the index of the corresponding molecule must be provided in the advanced interface, and typically will be just a closure around the number of atoms per molecule, using the already available `mol_index` function. 
 
-### Example
+## Example
 
 The example below illustrates the usage of the interface described above: 
 
