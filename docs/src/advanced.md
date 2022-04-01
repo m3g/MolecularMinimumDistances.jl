@@ -98,14 +98,6 @@ function iterate_lists(nsteps, water, protein)
         # Perform whatever futher analysis using the `list` of minimum distances.
     end
 end
-
-# This function is the driver fro the above example:
-function run(nsteps)
-    system = MolecularMinimumDistances.download_example()
-    water = coor(system, "water") # water coordinates
-    protein = coor(system, "protein") # protein coordinates
-    iterate_lists(nsteps, water, protein)
-end
 ```
 
 Running the above example shows that allocations are small for each iteration:
@@ -141,7 +133,7 @@ function iterate_lists_serial(nsteps, water, protein)
 end
 ```
 
-We can see that the updating of the cell lists and the computation of the minimum-distance lists are completely allocation free, such that the loop is allocation free:
+We can see that the updating of the cell lists and the computation of the minimum-distance lists is completely allocation free, such that the loop is allocation free:
 
 ```
 julia> @btime iterate_lists_serial(10, $water, $protein)
