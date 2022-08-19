@@ -1,10 +1,15 @@
 module MolecularMinimumDistances
 
-using CellListMap
+using DocStringExtensions
+const INTERNAL = "Internal function or structure - interface may change."
+
+using StaticArrays
+import CellListMap
+using .CellListMap.PeriodicSystems
+
 export MinimumDistance
+export SelfPairs, CrossPairs, AllPairs
 export minimum_distances, minimum_distances!
-export mol_index, init_list
-export Box
 
 """
 
@@ -46,30 +51,48 @@ end
 import Base: zero
 zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typemax(T))
 
-# Simplify the type signature of lists
-const List{T} = AbstractVector{<:MinimumDistance{T}}
+# Simplify signature of arrays of MinimumDistance and its tuples.
+const List{T} = Vector{<:MinimumDistance{T}}
+const ListTuple{T} = Tuple{<:List{T},<:List{T}}
 
 """
 
 ```
-mol_index(i_atom,n_atoms_per_molecule) = (i_atom-1) ÷ n_atoms_per_molecule + 1
+_mol_index(i_atom,n_atoms_per_molecule) = (i_atom-1) ÷ n_atoms_per_molecule + 1
 ```
 
-Internal structure or function - interface may change. 
+$(INTERNAL)
+
+# Extended help
 
 Sets the index of the molecule of an atom in the simples situation, in which all 
 molecules have the same number of atoms. This is the default setting, and the 
-`mol_index` parameter of the `minimum_distance` functions must be defined manually
+`_mol_index` parameter of the `minimum_distance` functions must be defined manually
 in other situations. 
 
 """
-mol_index(i, n_atoms_per_molecule) = (i - 1) ÷ n_atoms_per_molecule + 1
+_mol_index(i, n_atoms_per_molecule) = (i - 1) ÷ n_atoms_per_molecule + 1
+
+function _get_mol_index(mol_index, n_atoms_per_molecule)
+    if (isnothing(n_atoms_per_molecule) && isnothing(mol_index)) ||
+       (!isnothing(n_atoms_per_molecule) && !isnothing(mol_index))
+        throw(ArgumentError("Please specify *either* n_atoms_per_molecule *or* mol_index"))
+    end
+    if isnothing(mol_index)
+        mol_index = i -> _mol_index(i, n_atoms_per_molecule)
+    end
+    return mol_index
+end
 
 """
 
 ```
 init_list(x, mol_index::F) where F<:Function
 ```
+
+$(INTERNAL)
+
+# Extended help
 
 Initializes an array of type `Vector{MinimumDistance}` with length equal to the number of 
 molecules. `x` must be provided so that the type of variable of the coordinates can be 
@@ -134,44 +157,27 @@ function init_list(x::AbstractVector{<:AbstractVector}, mol_index::F) where {F<:
     return init_list(T, number_of_molecules)
 end
 
-init_list(::Type{T}, number_of_molecules::Int) where {T} =
-    fill(zero(MinimumDistance{T}), number_of_molecules)
-
 #
-# Reset list functions
+# Functions required for threaded computations
 #
-reset!(::Nothing) = nothing
+import .PeriodicSystems: copy_output, reset_output!, reducer, reduce_output!
+copy_output(md::MinimumDistance) = md
+reset_output!(md::MinimumDistance) = zero(MinimumDistance{T})
+reducer(md1::T, md2::T) where {T<:MinimumDistance} = md1.d < md2.d ? md1 : md2
 
-function reset!(list::List{T}) where {T} 
-    for i in eachindex(list)
-        list[i] = zero(MinimumDistance{T})
-    end
-    return nothing
+copy_output(list::ListTuple) = (copy_output(list[1]), copy_output(list[2]))
+function reset_output!(list::ListTuple)
+    reset_output!(list[1])
+    reset_output!(list[2])
+    return list_tuple
 end
-
-function reset!(list_threaded::AbstractVector{<:List})
+function reducer(list::ListTuple, list_threaded::Vector{ListTuple})
+    reset_output!(list)
     for i in eachindex(list_threaded)
-        reset!(list_threaded[i])
+        list = reduce_output!(list, list_threaded[i])
     end
-    return nothing
+    return list
 end
-
-function reset!(lists::Tuple{T,T}) where T<:List
-    reset!(lists[1])
-    reset!(lists[2])
-    return nothing
-end
-
-function reset!(list_threaded::AbstractVector{Tuple{T,T}}) where T<:List
-    for list_tuple in list_threaded
-        reset!(list_tuple[1])
-        reset!(list_tuple[2])
-    end
-    return nothing
-end
-
-# Reduction functions for lists of minimum-distances
-include("./reduction_functions.jl")
 
 #
 # Functions for when the lists of minimum-distances is that of a single
@@ -184,17 +190,17 @@ include("./self_pairs.jl")
 # that are closer to each molecule of the first set (only one list is 
 # returned)
 #
-include("./cross_pairs.jl")
+#include("./cross_pairs.jl")
 
 # 
 # Functions for when all pairs of minimum distances are desired,
 # between two disjoint sets of molecules
 #
-include("./all_pairs.jl")
+#include("./all_pairs.jl")
 
 #
 # Testing routines
 #
-include("./testing.jl")
+#include("./testing.jl")
 
 end # MolecularMinimumDistances
