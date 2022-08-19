@@ -48,6 +48,30 @@ atoms and are continously stored in the array of positions).
 
 # Examples
 
+```julia-repl
+julia> using MolecularMinimumDistances, StaticArrays
+
+julia> sys = SelfPairs(
+           positions=rand(SVector{3,Float64},10^5),
+           cutoff=0.1,
+           unitcell=[1,1,1],
+           n_atoms_per_molecule=5
+       )
+SelfPairs system with:
+
+Number of atoms: 100000
+Cutoff: 0.1
+unitcell: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+Number of molecules: 20000
+
+julia> minimum_distances!(sys)
+20000-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 4, 24930, 0.008039482961077074)
+ MinimumDistance{Float64}(true, 6, 74055, 0.0049818659155905255)
+ ⋮
+ MinimumDistance{Float64}(true, 99999, 75403, 0.0025051670801269433)
+```
+
 """
 function SelfPairs(;
     positions::AbstractVector{<:SVector{N,T}},
