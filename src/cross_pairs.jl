@@ -7,11 +7,11 @@ function update_list_cross!(
     i,
     j,
     d2,
-    mol_index_i::F,
+    mol_indices_i::F,
     list::List,
 ) where {F<:Function}
     d = sqrt(d2)
-    imol = mol_index_i(i)
+    imol = mol_indices_i(i)
     if d < list[imol].d
         list[imol] = MinimumDistance(true, i, j, d)
     end
@@ -22,7 +22,7 @@ end
 
 ```
 function minimum_distances!(
-    mol_index_i::F,
+    mol_indices_i::F,
     x_list::AbstractVector{<:MinimumDistance},
     y::AbstractVector,
     box, cl;
@@ -47,18 +47,18 @@ julia> box = Box([1,1],0.2);
 
 julia> cl = CellList(x,y,box);
 
-julia> x_list = init_list(x, i -> mol_index(i,4)) # 4 atoms per molecule
+julia> x_list = init_list(x, i -> mol_indices(i,4)) # 4 atoms per molecule
 3-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
 
-julia> x_list = init_list(y, i -> mol_index(i,10)); # 10 atoms per molecule
+julia> x_list = init_list(y, i -> mol_indices(i,10)); # 10 atoms per molecule
 
 julia> x_list_threaded = [ copy(y_list) for _ in 1:nbatches(cl) ]
 
 julia> minimum_distances!(
-           i -> mol_index(i,4), 
+           i -> mol_indices(i,4), 
            x_list, 
            y,
            box, 
@@ -76,7 +76,7 @@ julia> x_list
 
 """
 function minimum_distances!(
-    mol_index_i::F,
+    mol_indices_i::F,
     x_list::List,
     box::Box,
     cl::CellListMap.CellListPair;
@@ -86,7 +86,7 @@ function minimum_distances!(
     reset!(x_list)
     reset!(list_threaded)
     map_pairwise!(
-        (x, y, i, j, d2, x_list) -> update_list_cross!(i, j, d2, mol_index_i, x_list),
+        (x, y, i, j, d2, x_list) -> update_list_cross!(i, j, d2, mol_indices_i, x_list),
         x_list,
         box,
         cl;
@@ -144,9 +144,9 @@ function minimum_distances(
     parallel = true,
 ) where {UnitCellType,N,T}
     cl = CellList(x, y, box, parallel = parallel)
-    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
+    x_list = init_list(x, i -> mol_indices(i, n_atoms_per_molecule_x))
     minimum_distances!(
-        i -> mol_index(i, n_atoms_per_molecule_x),
+        i -> mol_indices(i, n_atoms_per_molecule_x),
         x_list,
         box,
         cl;
@@ -179,9 +179,9 @@ function minimum_distances(
 ) where {T}
     box = Box(limits(x,y),cutoff)
     cl = CellList(x, y, box, parallel = parallel)
-    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
+    x_list = init_list(x, i -> mol_indices(i, n_atoms_per_molecule_x))
     minimum_distances!(
-        i -> mol_index(i, n_atoms_per_molecule_x),
+        i -> mol_indices(i, n_atoms_per_molecule_x),
         x_list,
         box,
         cl;

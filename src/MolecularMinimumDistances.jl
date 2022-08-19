@@ -58,7 +58,7 @@ const ListTuple{T} = Tuple{<:List{T},<:List{T}}
 """
 
 ```
-_mol_index(i_atom,n_atoms_per_molecule) = (i_atom-1) ÷ n_atoms_per_molecule + 1
+_mol_indices(i_atom,n_atoms_per_molecule) = (i_atom-1) ÷ n_atoms_per_molecule + 1
 ```
 
 $(INTERNAL)
@@ -67,27 +67,28 @@ $(INTERNAL)
 
 Sets the index of the molecule of an atom in the simples situation, in which all 
 molecules have the same number of atoms. This is the default setting, and the 
-`_mol_index` parameter of the `minimum_distance` functions must be defined manually
+`_mol_indices` parameter of the `minimum_distance` functions must be defined manually
 in other situations. 
 
 """
-_mol_index(i, n_atoms_per_molecule) = (i - 1) ÷ n_atoms_per_molecule + 1
+_mol_indices(i, n_atoms_per_molecule) = (i - 1) ÷ n_atoms_per_molecule + 1
+_number_of_molecules(mol_indices, positions) = length(unique(mol_indices(i) for i in eachindex(positions)))
 
-function _get_mol_index(mol_index, n_atoms_per_molecule)
-    if (isnothing(n_atoms_per_molecule) && isnothing(mol_index)) ||
-       (!isnothing(n_atoms_per_molecule) && !isnothing(mol_index))
-        throw(ArgumentError("Please specify *either* n_atoms_per_molecule *or* mol_index"))
+function _get_mol_indices(mol_indices, n_atoms_per_molecule)
+    if (isnothing(n_atoms_per_molecule) && isnothing(mol_indices)) ||
+       (!isnothing(n_atoms_per_molecule) && !isnothing(mol_indices))
+        throw(ArgumentError("Please specify *either* n_atoms_per_molecule *or* mol_indices"))
     end
-    if isnothing(mol_index)
-        mol_index = i -> _mol_index(i, n_atoms_per_molecule)
+    if isnothing(mol_indices)
+        mol_indices = i -> _mol_indices(i, n_atoms_per_molecule)
     end
-    return mol_index
+    return mol_indices
 end
 
 """
 
 ```
-init_list(x, mol_index::F) where F<:Function
+init_list(x, mol_indices::F) where F<:Function
 ```
 
 $(INTERNAL)
@@ -96,7 +97,7 @@ $(INTERNAL)
 
 Initializes an array of type `Vector{MinimumDistance}` with length equal to the number of 
 molecules. `x` must be provided so that the type of variable of the coordinates can be 
-propagated to the distances, and `mol_index` is the function that given an atomic index `i`
+propagated to the distances, and `mol_indices` is the function that given an atomic index `i`
 returns the index of the molecule.
 
 ```
@@ -139,16 +140,16 @@ julia> init_list(x, i -> (i-1)÷2 + 1)
 
 ```
 
-The above annonymous function `i -> (i-1)÷2 + 1` is equivalent to `i -> mol_index(i,2)`,
+The above annonymous function `i -> (i-1)÷2 + 1` is equivalent to `i -> mol_indices(i,2)`,
 and can be generalized if the the number of atoms of each molecule is not the same.
 
 """
-function init_list(x::AbstractVector{<:AbstractVector}, mol_index::F) where {F<:Function}
+function init_list(x::AbstractVector{<:AbstractVector}, mol_indices::F) where {F<:Function}
     T = eltype(eltype(x))
     number_of_molecules = 0
     previous_molecule = 0
     for i in eachindex(x)
-        imol = mol_index(i)
+        imol = mol_indices(i)
         if imol != previous_molecule
             number_of_molecules += 1
             previous_molecule = imol
@@ -156,13 +157,14 @@ function init_list(x::AbstractVector{<:AbstractVector}, mol_index::F) where {F<:
     end
     return init_list(T, number_of_molecules)
 end
+init_list(::Type{T}, n::Int) where {T} = fill(zero(MinimumDistance{T}), n)
 
 #
 # Functions required for threaded computations
 #
 import .PeriodicSystems: copy_output, reset_output!, reducer, reduce_output!
 copy_output(md::MinimumDistance) = md
-reset_output!(md::MinimumDistance) = zero(MinimumDistance{T})
+reset_output!(md::MinimumDistance{T}) where {T} = zero(MinimumDistance{T})
 reducer(md1::T, md2::T) where {T<:MinimumDistance} = md1.d < md2.d ? md1 : md2
 
 copy_output(list::ListTuple) = (copy_output(list[1]), copy_output(list[2]))
@@ -183,7 +185,7 @@ end
 # Functions for when the lists of minimum-distances is that of a single
 # set of molecules (between the molecules of that set)
 #
-include("./self_pairs.jl")
+include("./SelfPairs.jl")
 
 #
 # Functions for when one wants the list of the atoms of the second set

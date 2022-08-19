@@ -20,7 +20,7 @@ Additionally, the low level interface allows the definition of more general grou
 
 Briefly, if a set of atoms belong to molecules of the same number of atoms, one can compute the index of each molecule using
 ```julia
-mol_index(i,n) = div((i - 1), n) + 1
+mol_indices(i,n) = div((i - 1), n) + 1
 ```
 where `i` is the atom index in the array of coordinates, and `n` is the number of atoms per molecule. This is the default assumed in the basic interface, and can be called with:
 ```julia-repl
@@ -28,10 +28,10 @@ julia> using StaticArrays
 
 julia> x = rand(SVector{3,Float64},9); # 3 water molecules
 
-julia> mol_index(2,3) # second atom belongs to first molecule
+julia> mol_indices(2,3) # second atom belongs to first molecule
 1
 
-julia> mol_index(4,3) # fourth atom belongs to second molecule
+julia> mol_indices(4,3) # fourth atom belongs to second molecule
 2
 ```
 
@@ -40,13 +40,13 @@ Typically, as we will show, this function will be used for setting up molecule i
 However, more general indexing can be used. For instance, let us suppose that the 9 atoms of the `x` array of coordinates above belong to `2` molecules, with `4` and `5` indexes each. Then, we could define, for example:
 
 ```julia-repl
-julia> my_mol_index(i) = i <= 4 ? 1 : 2
-my_mol_index (generic function with 1 method)
+julia> my_mol_indices(i) = i <= 4 ? 1 : 2
+my_mol_indices (generic function with 1 method)
 
-julia> my_mol_index(4)
+julia> my_mol_indices(4)
 1
 
-julia> my_mol_index(5)
+julia> my_mol_indices(5)
 2
 ```
 
@@ -55,17 +55,17 @@ Since the function can close-over an array of molecular indexes, the definition 
 ```julia-repl
 julia> molecular_indexes = [ 1, 3, 3, 2, 2, 1, 3, 1, 2 ];
 
-julia> my_mol_index(i) = molecular_indexes[i]
-my_mol_index (generic function with 1 method)
+julia> my_mol_indices(i) = molecular_indexes[i]
+my_mol_indices (generic function with 1 method)
 
-julia> my_mol_index(1)
+julia> my_mol_indices(1)
 1
 
-julia> my_mol_index(5)
+julia> my_mol_indices(5)
 2
 ```
 
-In summary, this function that given the index of the atom returns the index of the corresponding molecule must be provided in the advanced interface, and typically will be just a closure around the number of atoms per molecule, using the already available `mol_index` function. 
+In summary, this function that given the index of the atom returns the index of the corresponding molecule must be provided in the advanced interface, and typically will be just a closure around the number of atoms per molecule, using the already available `mol_indices` function. 
 
 ## Example
 
@@ -78,9 +78,9 @@ using PDBTools # example
 
 function iterate_lists(nsteps, water, protein, box)
     cl = CellList(protein,water,box)
-    # Function that given the index of the atom, returns the index of the molecule. Here, all molecules are similar, and we use the standard `mol_index` function:
-    water_index(i) = mol_index(i,3)
-    # Initialize output array; i -> mol_index(i,3) returns the molecule index for each water molecule
+    # Function that given the index of the atom, returns the index of the molecule. Here, all molecules are similar, and we use the standard `mol_indices` function:
+    water_index(i) = mol_indices(i,3)
+    # Initialize output array; i -> mol_indices(i,3) returns the molecule index for each water molecule
     list = init_list(water, water_index)
     # Initalize auxiliary arrays for multi-threading: The number of batches of multi-threading is obtained from a property of the cell-lists (see the CellListMap documentation for additional information and options).
     aux_cl = CellListMap.AuxThreaded(cl)
@@ -121,7 +121,7 @@ In fact, if we opted to run the calculation in serial, with:
 ```julia
 function iterate_lists_serial(nsteps, water, protein, box)
     cl = CellList(protein,water,box, parallel=false)
-    water_index(i) = mol_index(i,3)
+    water_index(i) = mol_indices(i,3)
     list = init_list(water, water_index)
     for i in 1:nsteps
         cl = UpdateCellList!(water, protein, box, cl, parallel=false)

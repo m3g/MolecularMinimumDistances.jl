@@ -117,13 +117,13 @@ And the computation can be made faster and in-place using the more advanced inte
 ```julia
 julia> using CellListMap
 
-julia> list = init_list(water, i -> mol_index(i,3)); # 3 atoms per molecule
+julia> list = init_list(water, i -> mol_indices(i,3)); # 3 atoms per molecule
 
 julia> cl = CellList(water,protein,box);
 
 julia> list_threaded = [ copy(list) for i in 1:nbatches(cl) ];
 
-julia> minimum_distances!(i -> mol_index(i,3), list, box, cl; list_threaded = list_threaded)
+julia> minimum_distances!(i -> mol_indices(i,3), list, box, cl; list_threaded = list_threaded)
 19338-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
@@ -137,14 +137,14 @@ Allocations occur only for the launching of multiple threads:
 
 ```julia
 julia> @btime minimum_distances!(
-           $(i -> mol_index(i,3)), 
+           $(i -> mol_indices(i,3)), 
            $list, $box, $cl; 
            parallel = false
         );
   12.723 ms (0 allocations: 0 bytes)
 
 julia> @btime minimum_distances!(
-          $(i -> mol_index(i,3)), 
+          $(i -> mol_indices(i,3)), 
           $list, $box, $cl;
           list_threaded = $list_threaded,
           parallel = true # default

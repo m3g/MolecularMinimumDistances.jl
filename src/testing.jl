@@ -4,13 +4,13 @@
 
 # For a single set of molecules
 function naive_md(x, n_atoms_per_molecule_x::Int, box::Box)
-    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
+    x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))
     for i in 1:length(x)-1
         vx = x[i]
         for j in i+1:length(x)
             vy = x[j]
-            imol = mol_index(i, n_atoms_per_molecule_x)
-            jmol = mol_index(j, n_atoms_per_molecule_x)
+            imol = _mol_indices(i, n_atoms_per_molecule_x)
+            jmol = _mol_indices(j, n_atoms_per_molecule_x)
             if imol == jmol
                 continue
             end
@@ -32,7 +32,7 @@ end
 
 # For disjoint sets, returning only one list
 function naive_md(x, y, n_atoms_per_molecule_x::Int, box::Box)
-    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
+    x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))
     for (i, vx) in pairs(x)
         for (j, vy) in pairs(y)
             vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
@@ -40,7 +40,7 @@ function naive_md(x, y, n_atoms_per_molecule_x::Int, box::Box)
             if d > box.cutoff
                 continue
             end
-            imol = mol_index(i, n_atoms_per_molecule_x)
+            imol = _mol_indices(i, n_atoms_per_molecule_x)
             if d < x_list[imol].d
                 x_list[imol] = MinimumDistance(true, i, j, d)
             end
@@ -51,8 +51,8 @@ end
 
 # For disjoint sets, returning both lists
 function naive_md(x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int, box::Box)
-    x_list = init_list(x, i -> mol_index(i, n_atoms_per_molecule_x))
-    y_list = init_list(y, i -> mol_index(i, n_atoms_per_molecule_y))
+    x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))
+    y_list = init_list(y, i -> _mol_indices(i, n_atoms_per_molecule_y))
     for (i, vx) in pairs(x)
         for (j, vy) in pairs(y)
             vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
@@ -60,11 +60,11 @@ function naive_md(x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int
             if d > box.cutoff
                 continue
             end
-            imol = mol_index(i, n_atoms_per_molecule_x)
+            imol = _mol_indices(i, n_atoms_per_molecule_x)
             if d < x_list[imol].d
                 x_list[imol] = MinimumDistance(true, i, j, d)
             end
-            jmol = mol_index(j, n_atoms_per_molecule_y)
+            jmol = _mol_indices(j, n_atoms_per_molecule_y)
             if d < y_list[jmol].d
                 y_list[jmol] = MinimumDistance(true, j, i, d)
             end
@@ -172,7 +172,7 @@ download_example() =
     Main.PDBTools.readPDB(download("https://raw.githubusercontent.com/m3g/ComplexMixtures.jl/master/test/data/NAMD/structure.pdb"))
 
 
-inds(i) = mol_index(i,3)
+inds(i) = _mol_indices(i,3)
 function iterate_lists(nsteps, list, list_threaded, water, protein, box, cl, aux; parallel = true)
    for i in 1:nsteps
        # water and protein coordinates, and box, could change here
