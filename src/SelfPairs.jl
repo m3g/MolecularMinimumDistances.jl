@@ -114,6 +114,61 @@ end
 """
 
 ```
+function minimum_distances(
+   positions=rand(SVector{3,Float64},10^5),
+   cutoff=0.1,
+   unitcell=[1,1,1],
+   n_atoms_per_molecule=5
+)
+```
+
+Compute the list of minimum distances given the precomputed cell lists, auxiliary vectors, and 
+lists of indexes of molecules of each atom. Should be preferred for multiple calls of this function,
+with the outer update of the cell lists. The `mol_indices` function must return, for each atom index,
+the corresponding molecular index. To obtain faster an minimally-allocating calls, 
+preallocate the `list_threaded` variable.
+
+# Examples
+
+```julia-repl
+julia> using CellListMap, StaticArrays
+
+julia> minimum_distances(
+           positions=rand(SVector{3,Float64},10^5),
+           cutoff=0.1,
+           unitcell=[1,1,1],
+           n_atoms_per_molecule=5
+       )
+20000-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 4, 25512, 0.007096015178413714)
+ MinimumDistance{Float64}(true, 8, 77067, 0.00703054355738512)
+ ⋮
+ MinimumDistance{Float64}(true, 99997, 76394, 0.009836647717692564)
+```
+
+"""
+function minimum_distances(;
+    positions::AbstractVector{<:SVector{N,T}},
+    cutoff::T,
+    unitcell::AbstractVecOrMat,
+    mol_indices::Union{Nothing,Function}=nothing,
+    n_atoms_per_molecule::Union{Nothing,Int}=nothing,
+    parallel=true
+) where {N,T}
+    mol_indices = _get_mol_indices(mol_indices, n_atoms_per_molecule)
+    system = SelfPairs(;
+        positions=positions,
+        cutoff=cutoff,
+        unitcell=unitcell,
+        mol_indices=mol_indices,
+        parallel=parallel
+    )
+    return minimum_distances!(system)
+end
+
+"""
+
+```
 function minimum_distances!(
     mol_indices::F,
     x_list::AbstractVector{<:MinimumDistance},
@@ -156,25 +211,6 @@ julia> minimum_distances!(i -> mol_indices(i,5), list, box, cl)
 ```
 
 """
-function minimum_distances(;
-    positions::AbstractVector{<:SVector{N,T}},
-    cutoff::T,
-    unitcell::AbstractVecOrMat,
-    mol_indices::Union{Nothing,Function}=nothing,
-    n_atoms_per_molecule::Union{Nothing,Int}=nothing,
-    parallel=true
-) where {N,T}
-    mol_indices = _get_mol_indices(mol_indices, n_atoms_per_molecule)
-    system = SelfPair(;
-        positions=positions,
-        cutoff=cutoff,
-        unitcell=unitcell,
-        mol_indices=mol_indices,
-        parallel=parallel
-    )
-    return minimum_distances!(system)
-end
-
 function minimum_distances!(sys::SelfPairs)
     list = map_pairwise!(
         (x, y, i, j, d2, list) -> update_list!(i, j, d2, list, sys),

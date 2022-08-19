@@ -2,6 +2,8 @@
 # Testing routines: computing the lists with naive algorithms
 #
 
+import .CellListMap: Box
+
 # For a single set of molecules
 function naive_md(x, n_atoms_per_molecule_x::Int, box::Box)
     x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))

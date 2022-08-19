@@ -203,6 +203,6 @@ include("./SelfPairs.jl")
 #
 # Testing routines
 #
-#include("./testing.jl")
+include("./testing.jl")
 
 end # MolecularMinimumDistances
