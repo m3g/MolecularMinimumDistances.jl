@@ -36,8 +36,8 @@ SelfPairs(;
 ```
 
 Initializes a particle system for the calculation of minimum distances
-within a single set of molecules. The shortest distance of of each molecule
-to any other molecule of the same set is computes.
+within a single set of molecules. The shortest distance of each molecule
+to any other molecule of the same set is computed.
 
 Instead of the number of atoms per molecule, the user can also provide a 
 more general `mol_indices` function, which, for each atomic index, returns the 
