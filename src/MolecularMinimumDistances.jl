@@ -10,6 +10,7 @@ using .CellListMap.PeriodicSystems
 export MinimumDistance
 export SelfPairs, CrossPairs, AllPairs
 export minimum_distances, minimum_distances!
+export getlist
 
 """
 
@@ -74,10 +75,10 @@ in other situations.
 _mol_indices(i, n_atoms_per_molecule) = (i - 1) ÷ n_atoms_per_molecule + 1
 _number_of_molecules(mol_indices, positions) = length(unique(mol_indices(i) for i in eachindex(positions)))
 
-function _get_mol_indices(mol_indices, n_atoms_per_molecule)
+function _get_mol_indices(mol_indices, n_atoms_per_molecule; flag::String="")
     if (isnothing(n_atoms_per_molecule) && isnothing(mol_indices)) ||
        (!isnothing(n_atoms_per_molecule) && !isnothing(mol_indices))
-        throw(ArgumentError("Please specify *either* n_atoms_per_molecule *or* mol_indices"))
+        throw(ArgumentError("Please specify *either* $(flag)n_atoms_per_molecule *or* $(flag)mol_indices"))
     end
     if isnothing(mol_indices)
         mol_indices = i -> _mol_indices(i, n_atoms_per_molecule)
@@ -181,6 +182,106 @@ function reducer(list::ListTuple, list_threaded::Vector{ListTuple})
     return list
 end
 
+
+"""
+
+```
+minimum_distances!(system)
+```
+
+General function that computes the minimum distances for an initialized system,
+of `SelfPairs`, `CrossPairs`, or `AllPairs` types. Used as an advanced alternative
+from preallocated system inputs.
+
+# Examples
+
+```julia-repl
+```
+
+"""
+function minimum_distances!(sys)
+    list = map_pairwise!(
+        (x, y, i, j, d2, list) -> update_list!(i, j, d2, list, sys),
+        sys.system
+    )
+    return list
+end
+
+"""
+
+```
+function minimum_distances(
+   positions=rand(SVector{3,Float64},10^5),
+   cutoff=0.1,
+   unitcell=[1,1,1],
+   n_atoms_per_molecule=5
+)
+```
+# Examples
+
+```julia-repl
+```
+
+"""
+function minimum_distances(;
+    positions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
+    xpositions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
+    ypositions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
+    cutoff::T,
+    unitcell::AbstractVecOrMat,
+    mol_indices::Union{Nothing,Function}=nothing,
+    xmol_indices::Union{Nothing,Function}=nothing,
+    ymol_indices::Union{Nothing,Function}=nothing,
+    n_atoms_per_molecule::Union{Nothing,Int}=nothing,
+    xn_atoms_per_molecule::Union{Nothing,Int}=nothing,
+    yn_atoms_per_molecule::Union{Nothing,Int}=nothing,
+    parallel=true
+) where {N,T}
+    # SelfPairs
+    if !isnothing(positions)
+        mol_indices = _get_mol_indices(mol_indices, n_atoms_per_molecule)
+        system = SelfPairs(;
+            positions=positions,
+            cutoff=cutoff,
+            unitcell=unitcell,
+            mol_indices=mol_indices,
+            parallel=parallel
+        )
+        return minimum_distances!(system)
+    end
+    # CrossPairs
+    if isnothing(ymol_indices) && isnothing(yn_atoms_per_molecule)
+        xmol_indices = _get_mol_indices(xmol_indices, xn_atoms_per_molecule; flag="x")
+        system = CrossPairs(;
+            xpositions=xpositions,
+            ypositions=ypositions,
+            cutoff=cutoff,
+            unitcell=unitcell,
+            xmol_indices=xmol_indices,
+            parallel=parallel
+        )
+        return minimum_distances!(system)
+    end
+    # AllPairs
+    if !isnothing(xmol_indices) && !isnothing(ymol_indices)
+        #= voltar
+        xmol_indices = _get_mol_indices(xmol_indices, xn_atoms_per_molecule; flag="x")
+        system = CrossPairs(;
+            xpositions=xpositions,
+            xpositions=ypositions,
+            cutoff=cutoff,
+            unitcell=unitcell,
+            xmol_indices=xmol_indices,
+            parallel=parallel
+        )
+        return minimum_distances!(system)
+        =#
+    end
+end
+
+abstract type SystemPairs end
+getlist(sys::SystemPairs) = sys.system.output
+
 #
 # Functions for when the lists of minimum-distances is that of a single
 # set of molecules (between the molecules of that set)
@@ -192,7 +293,7 @@ include("./SelfPairs.jl")
 # that are closer to each molecule of the first set (only one list is 
 # returned)
 #
-#include("./cross_pairs.jl")
+include("./CrossPairs.jl")
 
 # 
 # Functions for when all pairs of minimum distances are desired,
