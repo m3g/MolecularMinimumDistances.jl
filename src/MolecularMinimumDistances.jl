@@ -49,12 +49,18 @@ struct MinimumDistance{T}
     j::Int
     d::T
 end
-import Base: zero
+import Base: zero, copy
 zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typemax(T))
+copy(md::MinimumDistance) = MinimumDistance(md.within_cutoff, md.i, md.j, md.d)
 
 # Simplify signature of arrays of MinimumDistance and its tuples.
-const List{T} = Vector{<:MinimumDistance{T}}
-const ListTuple{T} = Tuple{<:List{T},<:List{T}}
+struct List{T}
+    pairs::Vector{MinimumDistance{T}}
+end
+struct ListTuple{T}
+    xpairs::Vector{MinimumDistance{T}}
+    ypairs::Vector{MinimumDistance{T}}
+end
 
 """
 
@@ -164,24 +170,33 @@ init_list(::Type{T}, n::Int) where {T} = fill(zero(MinimumDistance{T}), n)
 # Functions required for threaded computations
 #
 import .PeriodicSystems: copy_output, reset_output!, reducer, reduce_output!
-copy_output(md::MinimumDistance) = md
-reset_output!(md::MinimumDistance{T}) where {T} = zero(MinimumDistance{T})
-reducer(md1::T, md2::T) where {T<:MinimumDistance} = md1.d < md2.d ? md1 : md2
+copy_output(list::List) = List(copy(list.pairs))
+reset_output!(list::List) = list.pairs .= zero(eltype(list.pairs))
+function reduce_output!(list::List, list_threaded::Vector{List})
+    list = reset_output!(list)
+    for i in eachindex(list_threaded)
+        for j in eachindex(list, list_threaded[i])
+            md1 = list[j]
+            md2 = list_threaded[i][j]
+            list[j] = md1.d < md2.d ? md1 : md2
+        end
+    end
+    return list
+end
 
-copy_output(list::ListTuple) = (copy_output(list[1]), copy_output(list[2]))
+copy_output(list::ListTuple) = ListTuple(copy_output(list.xpairs), copy_output(list.ypairs))
 function reset_output!(list::ListTuple)
     reset_output!(list[1])
     reset_output!(list[2])
-    return list_tuple
+    return list
 end
-function reducer(list::ListTuple, list_threaded::Vector{ListTuple})
+function reduce_output!(list::ListTuple, list_threaded::Vector{<:ListTuple})
     reset_output!(list)
     for i in eachindex(list_threaded)
         list = reduce_output!(list, list_threaded[i])
     end
     return list
 end
-
 
 """
 
@@ -264,19 +279,20 @@ function minimum_distances(;
     end
     # AllPairs
     if !isnothing(xmol_indices) && !isnothing(ymol_indices)
-        #= voltar
         xmol_indices = _get_mol_indices(xmol_indices, xn_atoms_per_molecule; flag="x")
+        ymol_indices = _get_mol_indices(ymol_indices, yn_atoms_per_molecule; flag="y")
         system = CrossPairs(;
             xpositions=xpositions,
-            xpositions=ypositions,
+            ypositions=ypositions,
             cutoff=cutoff,
             unitcell=unitcell,
             xmol_indices=xmol_indices,
+            ymol_indices=ymol_indices,
             parallel=parallel
         )
         return minimum_distances!(system)
-        =#
     end
+    throw(ArgumentError("Incorrect set of keyword input parameters."))
 end
 
 abstract type SystemPairs end
@@ -299,7 +315,7 @@ include("./CrossPairs.jl")
 # Functions for when all pairs of minimum distances are desired,
 # between two disjoint sets of molecules
 #
-#include("./all_pairs.jl")
+include("./AllPairs.jl")
 
 #
 # Testing routines
