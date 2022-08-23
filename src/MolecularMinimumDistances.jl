@@ -54,13 +54,8 @@ zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typema
 copy(md::MinimumDistance) = MinimumDistance(md.within_cutoff, md.i, md.j, md.d)
 
 # Simplify signature of arrays of MinimumDistance and its tuples.
-struct List{T}
-    pairs::Vector{MinimumDistance{T}}
-end
-struct ListTuple{T}
-    xpairs::Vector{MinimumDistance{T}}
-    ypairs::Vector{MinimumDistance{T}}
-end
+List{T} = Vector{<:MinimumDistance{T}}
+ListTuple{T} = Tuple{Vector{<:MinimumDistance{T}}, Vector{<:MinimumDistance{T}}} 
 
 """
 
@@ -169,31 +164,34 @@ init_list(::Type{T}, n::Int) where {T} = fill(zero(MinimumDistance{T}), n)
 #
 # Functions required for threaded computations
 #
-import .PeriodicSystems: copy_output, reset_output!, reducer, reduce_output!
-copy_output(list::List) = List(copy(list.pairs))
-reset_output!(list::List) = list.pairs .= zero(eltype(list.pairs))
-function reduce_output!(list::List, list_threaded::Vector{List})
-    list = reset_output!(list)
-    for i in eachindex(list_threaded)
-        for j in eachindex(list, list_threaded[i])
-            md1 = list[j]
-            md2 = list_threaded[i][j]
-            list[j] = md1.d < md2.d ? md1 : md2
-        end
-    end
-    return list
-end
+import .PeriodicSystems: copy_output, reset_output!, reducer
+copy_output(list::List) = copy(list) 
+reset_output!(list::List) = list .= Ref(zero(eltype(list)))
+reducer(md1::MinimumDistance{T}, md2::MinimumDistance{T}) where T = md1.d < md2.d ? md1 : md2
 
-copy_output(list::ListTuple) = ListTuple(copy_output(list.xpairs), copy_output(list.ypairs))
+copy_output(list::ListTuple) = (copy_output(list[1]), copy_output(list[2]))
 function reset_output!(list::ListTuple)
     reset_output!(list[1])
     reset_output!(list[2])
     return list
 end
+function reducer(l1::ListTuple, l2::ListTuple)
+    for i in eachindex(l1[1], l2[1])
+        l1[1][i] = reducer(l1[1][i], l2[1][i])
+    end
+    for i in eachindex(l1[2], l2[2])
+        l1[2][i] = reducer(l1[2][i], l2[2][i])
+    end
+    return l1
+end
+
+
+# be careful because ListTuple is not mutable
 function reduce_output!(list::ListTuple, list_threaded::Vector{<:ListTuple})
-    reset_output!(list)
+    list = reset_output!(list)
     for i in eachindex(list_threaded)
-        list = reduce_output!(list, list_threaded[i])
+        list[1] = reduce_output!(list[1], list_threaded[1][i])
+        list[2] = reduce_output!(list[2], list_threaded[2][i])
     end
     return list
 end
@@ -215,11 +213,11 @@ from preallocated system inputs.
 
 """
 function minimum_distances!(sys)
-    list = map_pairwise!(
+    map_pairwise!(
         (x, y, i, j, d2, list) -> update_list!(i, j, d2, list, sys),
         sys.system
     )
-    return list
+    return getlist(sys)
 end
 
 """
