@@ -53,10 +53,6 @@ import Base: zero, copy
 zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typemax(T))
 copy(md::MinimumDistance) = MinimumDistance(md.within_cutoff, md.i, md.j, md.d)
 
-# Simplify signature of arrays of MinimumDistance and its tuples.
-List{T} = Vector{<:MinimumDistance{T}}
-ListTuple{T} = Tuple{Vector{<:MinimumDistance{T}}, Vector{<:MinimumDistance{T}}} 
-
 """
 
 ```
@@ -86,6 +82,10 @@ function _get_mol_indices(mol_indices, n_atoms_per_molecule; flag::String="")
     end
     return mol_indices
 end
+
+# Simplify signature of arrays of MinimumDistance and its tuples.
+List{T} = Vector{<:MinimumDistance{T}}
+ListTuple{T} = Tuple{Vector{<:MinimumDistance{T}}, Vector{<:MinimumDistance{T}}} 
 
 """
 
@@ -162,13 +162,21 @@ end
 init_list(::Type{T}, n::Int) where {T} = fill(zero(MinimumDistance{T}), n)
 
 #
-# Functions required for threaded computations
+# Overload of the PeriodicSystems functions that are required for list_threaded
+# computations: copy_output, reset_output!, and reducer.
+#
+# Note that we have two types of output variables here: List, and a tuple of List.
+# The List is simply an array of `MinimumDistance{T}`, and we have defined above
+# `copy` and `zero` methods for this type, such that we only need to define 
+# that reseting this variable consists of returing its zero, and set up the reducer.
+# The methods for abstract arrays will take care of the rest.
+#
+# For the Tuple of lists, we need to be more explicit, and define appropriate copy_output,
+# reset_output! and reducer functions.
 #
 import .PeriodicSystems: copy_output, reset_output!, reducer
-copy_output(list::List) = copy(list) 
-reset_output!(list::List) = list .= Ref(zero(eltype(list)))
+reset_output!(md::MinimumDistance{T}) where T = zero(MinimumDistance{T})
 reducer(md1::MinimumDistance{T}, md2::MinimumDistance{T}) where T = md1.d < md2.d ? md1 : md2
-
 copy_output(list::ListTuple) = (copy_output(list[1]), copy_output(list[2]))
 function reset_output!(list::ListTuple)
     reset_output!(list[1])
@@ -185,30 +193,51 @@ function reducer(l1::ListTuple, l2::ListTuple)
     return l1
 end
 
-
-# be careful because ListTuple is not mutable
-function reduce_output!(list::ListTuple, list_threaded::Vector{<:ListTuple})
-    list = reset_output!(list)
-    for i in eachindex(list_threaded)
-        list[1] = reduce_output!(list[1], list_threaded[1][i])
-        list[2] = reduce_output!(list[2], list_threaded[2][i])
-    end
-    return list
-end
-
 """
 
 ```
 minimum_distances!(system)
 ```
 
-General function that computes the minimum distances for an initialized system,
-of `SelfPairs`, `CrossPairs`, or `AllPairs` types. Used as an advanced alternative
-from preallocated system inputs.
+Function that computes the minimum distances for an initialized system,
+of `SelfPairs`, `CrossPairs`, or `AllPairs` types. 
 
-# Examples
+The function returs a `Vector{MinimumDistance}` cor `SelfPairs` and `CrossPairs`
+inputs, and a Tuple of two of such vectors for the `AllPairs` input types.
+
+This function is used as an advanced alternative from preallocated system inputs. Only a few allocations 
+remain on a call to `minimum_distances!`, mostly related to the launch of the multithreaded 
+calculations.
+
+# Example
 
 ```julia-repl
+julia> using MolecularMinimumDistances, StaticArrays
+
+julia> sys = SelfPairs(
+           positions = rand(SVector{3,Float64},1000), 
+           unitcell=[1,1,1], 
+           cutoff = 0.1, 
+           n_atoms_per_molecule=10,
+       )
+SelfPairs system with:
+
+Number of atoms: 1000
+Cutoff: 0.1
+unitcell: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+Number of molecules: 100
+
+julia> minimum_distances!(sys)
+100-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 8, 579, 0.03570387474690425)
+ MinimumDistance{Float64}(true, 12, 534, 0.02850448652684309)
+ ⋮
+ MinimumDistance{Float64}(true, 996, 423, 0.03655145613454862)
+
+julia> using BenchmarkTools
+
+julia> @btime minimum_distances!(\$sys);
+  178.468 μs (209 allocations: 22.80 KiB)
 ```
 
 """
@@ -225,14 +254,114 @@ end
 ```
 function minimum_distances(
    positions=rand(SVector{3,Float64},10^5),
+   # or xpositions *and* ypositions
    cutoff=0.1,
    unitcell=[1,1,1],
    n_atoms_per_molecule=5
+   # or xn_atoms_per_molecule 
+   # or xn_atoms_per_molecule *and* yn_atoms_per_molecule
 )
 ```
+
+This function computes directly the minimum distances in a set of particles. 
+Depending on the number of input position arrays provided and on the number
+of molecular index information provided, a different type of calculation is
+performed:
+
+- If `positions` and `n_atoms_per_molecule` are provided, the minimum distances
+  within the set of molecules of the set provided are computed. 
+
+- If `xpositions` and `ypositions` are provided, and **only** `xn_atoms_per_molecule`
+  is provided, the minimum distance of molecule of set `x` will be computed relative
+  to set `y` (or, in other words, `ypositions` are considered a single structure) 
+
+- If `xpositions` and `ypositions` are provided, and `xn_atoms_per_molecule` **and**
+  `yn_atoms_per_molecule` are given, the minimum distances of each molecule of `x`
+  to any atom of `y` are computed, and vice-versa. A tuple of vectors of minimum
+  distances is returned, with lengths corresponding to the number of molecules
+  of sets `x` and `y`, respectively.
+
+As for the other functions are constructors, the `n_atoms_per_molecule` keyword
+parameters can be substituted by a general function which returns the molecular 
+index of the molecule of each atom (i. e. `(i) -> (i-1)%n_atoms_per_molecule + 1`
+in the simplest and default case).
+
 # Examples
 
+## Single set of molecules: all minimum distances within the set
+
+Note that the output contains a vector of `MinimumDistance` elements
+with a length equal to the number of molecules of the set.
+
 ```julia-repl
+julia> using MolecularMinimumDistances, StaticArrays
+
+julia> list = minimum_distances(
+           positions = rand(SVector{3,Float64},10^5), 
+           unitcell=[1,1,1], 
+           cutoff = 0.1, 
+           n_atoms_per_molecule=10)
+10000-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 5, 71282, 0.007669490894775502)
+ MinimumDistance{Float64}(true, 19, 36374, 0.005280726329888545)
+ ⋮
+ MinimumDistance{Float64}(true, 99998, 44320, 0.006509632622462869)
+```
+
+## Two sets: minimum distances of one set relative to the other
+
+Note that the output contains the number of molecules of the `x` set.
+For each molecule of this set, the minimum distance to the set `y` is 
+computed. This is the typical "solute-solvent" example, where
+`x` contains the solvent positions, and `y` contains the solute
+positions.
+
+```julia-repl
+julia> list = minimum_distances(
+           xpositions = rand(SVector{3,Float64},10^5), 
+           ypositions = rand(SVector{3,Float64},10^3),
+           unitcell=[1,1,1], 
+           cutoff = 0.1, 
+           xn_atoms_per_molecule=10,
+       )
+10000-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 5, 596, 0.025526453519907292)
+ MinimumDistance{Float64}(true, 18, 391, 0.014114699969628301)
+ ⋮
+ MinimumDistance{Float64}(true, 99993, 289, 0.016089848937890512)
+```
+
+## Two-sets: computing all minimum distances among molecules
+
+If the number of molecules of both sets are provided with the `xn_atoms_per_molecule`
+and `yn_atoms_per_molecule` keywords, both sets are split into molecules,
+and all minimum distances are computed. For each molecule of each set, 
+the minimimum distance to any other molecule of the other set is
+returned. The output is a tuple of lists.
+
+```julia-repl
+julia> lists = minimum_distances(
+           xpositions = rand(SVector{3,Float64},10^5), 
+           ypositions = rand(SVector{3,Float64},10^3),
+           unitcell=[1,1,1], 
+           cutoff = 0.1, 
+           xn_atoms_per_molecule=10,
+           yn_atoms_per_molecule=100
+       );
+
+julia> lists[1]
+10000-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 10, 471, 0.03211876310646438)
+ MinimumDistance{Float64}(true, 13, 113, 0.0364141004391549)
+ ⋮
+ MinimumDistance{Float64}(true, 99992, 673, 0.0345818388567913)
+
+julia> lists[2]
+10-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 81, 754, 0.002292544732548094)
+ MinimumDistance{Float64}(true, 156, 17208, 0.0018147268509811352)
+ ⋮
+ MinimumDistance{Float64}(true, 944, 98048, 0.002902338025311851)
 ```
 
 """
