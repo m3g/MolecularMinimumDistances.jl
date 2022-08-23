@@ -276,10 +276,10 @@ function minimum_distances(;
         return minimum_distances!(system)
     end
     # AllPairs
-    if !isnothing(xmol_indices) && !isnothing(ymol_indices)
+    if !isnothing(xpositions) && (!isnothing(yn_atoms_per_molecule) || !isnothing(ymol_indices))
         xmol_indices = _get_mol_indices(xmol_indices, xn_atoms_per_molecule; flag="x")
         ymol_indices = _get_mol_indices(ymol_indices, yn_atoms_per_molecule; flag="y")
-        system = CrossPairs(;
+        system = AllPairs(;
             xpositions=xpositions,
             ypositions=ypositions,
             cutoff=cutoff,
