@@ -63,18 +63,20 @@ The system was simulated with periodic boundary conditions, with sides in this f
 Finally, we find all the TMAO molecules having at least one atom closer than 12 Angstroms to the protein, using the current package (TMAO has 14 atoms):
 
 ```julia-repl
-julia> box = Box([83.115, 83.044, 83.063], 12.);
-
-julia> md = minimum_distances(xtmao, xprot, 14, box)
+julia> list = minimum_distances(
+           xpositions=xtmao, # solvent
+           ypositions=xprot, # solute
+           xn_atoms_per_molecule=14,
+           cutoff=12.0,
+           unitcell=[83.115, 83.044, 83.063]
+       )
 181-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
  ⋮
- MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
 
-julia> count(x -> x.within_cutoff, md)
+julia> count(x -> x.within_cutoff, list)
 33
 ```
 
@@ -95,51 +97,59 @@ julia> xwat = coor(system,"resname TIP3")
 
 julia> using BenchmarkTools
 
-julia> @btime minimum_distances($xwat, $xprot, 3, $box);
-  4.726 ms (2748 allocations: 11.82 MiB)
+julia> @btime minimum_distances(
+           xpositions=$xwat, # solvent
+           ypositions=$xprot, # solute
+           xn_atoms_per_molecule=3,
+           cutoff=12.0,
+           unitcell=[83.115, 83.044, 83.063]
+       );
+  6.288 ms (3856 allocations: 13.03 MiB)
 ```
 
 To compare, a naive algorithm to compute the same thing takes:
 
 ```julia-repl
-julia> @btime MolecularMinimumDistances.naive_md($xwat, $xprot, 3, $box);
-  911.580 ms (2 allocations: 604.36 KiB)
+julia> @btime MolecularMinimumDistances.naive_md($xwat, $xprot, 3, [83.115, 83.044, 83.063], 12.0);
+  2.488 s (97 allocations: 609.16 KiB)
 ```
 
-And the computation can be made faster and in-place using the more advanced interface that allows preallocation of all necessary arrays:
+And the computation can be made faster and in-place using the more advanced interface that allows preallocation of main necessary arrays:
 
 ```julia-repl
-julia> list = init_list(xwat, i -> mol_indices(i,3)); # 3 atoms per molecule
+julia> sys = CrossPairs(
+           xpositions=xwat, # solvent
+           ypositions=xprot, # solute
+           xn_atoms_per_molecule=14,
+           cutoff=12.0,
+           unitcell=[83.115, 83.044, 83.063]
+       )
+CrossPairs system with:
 
-julia> cl = CellList(xwat,xprot,box);
+Number of atoms of set: 58014
+Number of atoms of target structure: 1463
+Cutoff: 12.0
+unitcell: [83.12, 0.0, 0.0, 0.0, 83.04, 0.0, 0.0, 0.0, 83.06]
+Number of molecules in set: 4144
 
-julia> minimum_distances!(i -> mol_indices(i,3), list, box, cl)
-19338-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
- ⋮
- MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
- MinimumDistance{Float64}(false, 0, 0, Inf)
+julia> @btime minimum_distances!($sys);
+  2.969 ms (196 allocations: 22.80 KiB)
 ```
 
-Allocations occur only for the launching of multiple threads:
+Most remaining allocations occur only for the launching of multiple threads:
 
 ```julia-repl
-julia> @btime minimum_distances!(
-           $(i -> mol_indices(i,3)), 
-           $list, $box, $cl, 
-           parallel = false
-        );
-  12.723 ms (0 allocations: 0 bytes)
+julia> sys = CrossPairs(
+           xpositions=xwat, # solvent
+           ypositions=xprot, # solute
+           xn_atoms_per_molecule=14,
+           cutoff=12.0,
+           unitcell=[83.115, 83.044, 83.063],
+           parallel=false # default is true
+       );
 
-julia> @btime minimum_distances!(
-          $(i -> mol_indices(i,3)), 
-          $list, $box, $cl,
-          parallel = true # default
-        );
-  3.473 ms (135 allocations: 7.10 MiB)
-
+julia> @btime minimum_distances!($sys);
+  15.249 ms (7 allocations: 576 bytes)
 ```
 
 ## Details of the illustration
@@ -149,6 +159,7 @@ The initial illustration here consists of a toy solute-solvent example, where th
 ```julia
 using MolecularMinimumDistances, StaticArrays
 # x will contain the "solvent", composed by 40 diatomic molecules
+T = SVector{2,Float64}
 x = T[]
 cmin = T(-20,-20)
 for i in 1:40
@@ -166,7 +177,13 @@ and the solute. In the input we need to specify the number of atoms of each mole
 in `x`, and the cutoff up to which we want the distances to be computed:
 
 ```julia-repl
-julia> md = minimum_distances(x,y,2,10.0)
+julia> list = minimum_distances(
+           xpositions=x,
+           ypositions=y,
+           xn_atoms_per_molecule=2,
+           unitcell=[40.0, 40.0],
+           cutoff=10.0
+       )
 40-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(true, 2, 3, 1.0764931248364737)
  MinimumDistance{Float64}(false, 0, 0, Inf)
@@ -181,7 +198,7 @@ The output is a list of `MinimumDistance` data structures, one for each molecule
 In this example, from the 40 molecules of `x`, eleven had atoms closer than the cutoff to some
 atom of `y`:
 ```julia-repl
-julia> count(x -> x.within_cutoff, md)
+julia> count(x -> x.within_cutoff, list)
 11
 ```
 
@@ -191,7 +208,7 @@ We have an auxiliary function to plot the result, in this case where the "atoms"
 using Plots
 import MolecularMinimumDistances: plot_md!
 p = plot(lims=(-20,20),framestyle=:box,grid=false,aspect_ratio=1)
-plot_md!(p, x, 2, y, 6, md, y_cycle=true)
+plot_md!(p, x, 2, y, 6, list, y_cycle=true)
 ```
 will produce the illustration plot above, in which the nearest point between the two sets is identified.
 
