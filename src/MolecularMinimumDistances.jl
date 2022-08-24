@@ -53,6 +53,17 @@ import Base: zero, copy
 zero(::Type{MinimumDistance{T}}) where {T} = MinimumDistance(false, 0, 0, typemax(T))
 copy(md::MinimumDistance) = MinimumDistance(md.within_cutoff, md.i, md.j, md.d)
 
+import Base.show
+function Base.show(io::IO, mime::MIME"text/plain", md::MinimumDistance{T}) where T
+    print(io,"""
+    $(md)
+
+    Distance within cutoff, within_cutoff = $(md.within_cutoff)
+    x atom of pair, i = $(md.i)
+    y atom of pair, j = $(md.j)
+    Distance found, d = $(md.d)""")
+end
+
 """
 
 ```
