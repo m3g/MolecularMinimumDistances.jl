@@ -78,8 +78,8 @@ The simulations was performed with periodic boundary conditions, in a cubic box 
 
 ```julia-repl
 julia> list = minimum_distances(
-           xpositions=xtmao, # solvent
-           ypositions=xprot, # solute
+           xpositions=tmao, # solvent
+           ypositions=protein, # solute
            xn_atoms_per_molecule=14,
            cutoff=12.0,
            unitcell=[84.48, 84.48, 84.48]
@@ -123,8 +123,8 @@ is that now wee need to provide the number of atoms of both TMAO and water:
 
 ```julia-repl
 julia> water_list, tmao_list = minimum_distances(
-           xpositions=xwat,
-           ypositions=xtmao,
+           xpositions=water,
+           ypositions=tmao,
            xn_atoms_per_molecule=3,
            yn_atoms_per_molecule=14,
            unitcell=[84.48, 84.48, 84.48],
@@ -161,7 +161,7 @@ A typical call would be:
 
 ```julia-repl
 julia> water_list = minimum_distances(
-           positions=xwat,
+           positions=water,
            n_atoms_per_molecule=3,
            unitcell=[84.48, 84.48, 84.48],
            cutoff=12.0
