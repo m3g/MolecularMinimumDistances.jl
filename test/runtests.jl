@@ -1,6 +1,5 @@
 using Test
 using StaticArrays
-using CellListMap
 using MolecularMinimumDistances
 import MolecularMinimumDistances: init_list, _mol_indices
 
@@ -23,14 +22,12 @@ end
     #
     x = [rand(SVector{3,Float64}) for _ in 1:135]
 
-    for parallel in (true, false), 
-        unitcell in ([1, 1, 1],
-        [1.0 0.2 0.0
-            0.2 1.0 0.2
-            0.0 0.0 1.0])
+    for parallel in (true, false),
+        unitcell in ([1, 1, 1], [1.0 0.2 0.0; 0.2 1.0 0.2; 0.0 0.0 1.0])
+
         cutoff = 0.2
 
-        x_list_naive = MolecularMinimumDistances.naive_md(x, 3, Box(unitcell, cutoff))
+        x_list_naive = MolecularMinimumDistances.naive_md(x, 3, unitcell, cutoff)
 
         x_list = minimum_distances(positions=x, n_atoms_per_molecule=3, cutoff=cutoff, unitcell=unitcell, parallel=parallel)
         @test x_list ≈ x_list_naive
@@ -54,21 +51,19 @@ end
     x = [rand(SVector{3,Float64}) for _ in 1:100]
     y = [rand(SVector{3,Float64}) for _ in 1:90]
 
-    for parallel in (true, false), 
-        unitcell in ([1, 1, 1],
-        [1.0 0.2 0.0
-            0.2 1.0 0.2
-            0.0 0.0 1.0])
+    for parallel in (true, false),
+        unitcell in ([1, 1, 1], [1.0 0.2 0.0; 0.2 1.0 0.2; 0.0 0.0 1.0])
+
         cutoff = 0.2
-        x_list_naive = MolecularMinimumDistances.naive_md(x, y, 5, Box(unitcell, cutoff))
+        x_list_naive = MolecularMinimumDistances.naive_md(x, y, 5, unitcell, cutoff)
 
         x_list = minimum_distances(xpositions=x, ypositions=y, cutoff=cutoff, unitcell=unitcell, xn_atoms_per_molecule=5, parallel=parallel)
         @test x_list ≈ x_list_naive
 
-        x_list = minimum_distances(xpositions=x, ypositions=y, cutoff=cutoff, unitcell=unitcell, xmol_indices=i -> _mol_indices(i,5), parallel=parallel)
+        x_list = minimum_distances(xpositions=x, ypositions=y, cutoff=cutoff, unitcell=unitcell, xmol_indices=i -> _mol_indices(i, 5), parallel=parallel)
         @test x_list ≈ x_list_naive
 
-        sys = CrossPairs(xpositions=x, ypositions=y, cutoff=cutoff, unitcell=unitcell, xn_atoms_per_molecule=5, parallel=parallel) 
+        sys = CrossPairs(xpositions=x, ypositions=y, cutoff=cutoff, unitcell=unitcell, xn_atoms_per_molecule=5, parallel=parallel)
         minimum_distances!(sys)
         @test getlist(sys) ≈ x_list_naive
 
@@ -81,37 +76,35 @@ end
     #
     # Disjoint sets of molecules
     #
-    x = [ rand(SVector{3,Float64}) for _ in 1:100 ]
-    y = [ rand(SVector{3,Float64}) for _ in 1:90 ]
+    x = [rand(SVector{3,Float64}) for _ in 1:100]
+    y = [rand(SVector{3,Float64}) for _ in 1:90]
 
-    for parallel in (true, false), 
-        unitcell in ([1,1,1],
-                 [1.0 0.2 0.0
-                      0.2 1.0 0.2
-                      0.0 0.0 1.0])
+    for parallel in (true, false),
+        unitcell in ([1, 1, 1], [1.0 0.2 0.0; 0.2 1.0 0.2; 0.0 0.0 1.0])
+
         cutoff = 0.2
 
-        x_list_naive, y_list_naive = MolecularMinimumDistances.naive_md(x,y,5,3,Box(unitcell, cutoff))
+        x_list_naive, y_list_naive = MolecularMinimumDistances.naive_md(x, y, 5, 3, unitcell, cutoff)
 
         x_list, y_list = minimum_distances(
-            xpositions=x, 
-            ypositions=y, 
-            cutoff=cutoff, 
-            unitcell=unitcell, 
-            xn_atoms_per_molecule=5, 
-            yn_atoms_per_molecule=3, 
+            xpositions=x,
+            ypositions=y,
+            cutoff=cutoff,
+            unitcell=unitcell,
+            xn_atoms_per_molecule=5,
+            yn_atoms_per_molecule=3,
             parallel=parallel
         )
         @test x_list ≈ x_list_naive
         @test y_list ≈ y_list_naive
 
         sys = AllPairs(
-            xpositions=x, 
-            ypositions=y, 
-            cutoff=cutoff, 
-            unitcell=unitcell, 
-            xn_atoms_per_molecule=5, 
-            yn_atoms_per_molecule=3, 
+            xpositions=x,
+            ypositions=y,
+            cutoff=cutoff,
+            unitcell=unitcell,
+            xn_atoms_per_molecule=5,
+            yn_atoms_per_molecule=3,
             parallel=parallel
         )
         x_list, y_list = minimum_distances!(sys)
@@ -119,12 +112,12 @@ end
         @test y_list ≈ y_list_naive
 
         sys = AllPairs(
-            xpositions=x, 
-            ypositions=y, 
-            cutoff=cutoff, 
-            unitcell=unitcell, 
-            xmol_indices = i -> _mol_indices(i,5), 
-            ymol_indices = i -> _mol_indices(i,3), 
+            xpositions=x,
+            ypositions=y,
+            cutoff=cutoff,
+            unitcell=unitcell,
+            xmol_indices=i -> _mol_indices(i, 5),
+            ymol_indices=i -> _mol_indices(i, 3),
             parallel=parallel
         )
         x_list, y_list = minimum_distances!(sys)

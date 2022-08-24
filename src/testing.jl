@@ -5,14 +5,18 @@
 import .CellListMap: Box
 
 # For a single set of molecules
-function naive_md(x, n_atoms_per_molecule_x::Int, box::Box)
-    x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))
+function naive_md(x, xn_atoms_per_molecule::Int, unitcell::AbstractVecOrMat, cutoff::Real)
+    box = Box(unitcell, cutoff)
+    naive_md(x, xn_atoms_per_molecule, box)
+end
+function naive_md(x, xn_atoms_per_molecule::Int, box::Box)
+    x_list = init_list(x, i -> _mol_indices(i, xn_atoms_per_molecule))
     for i in 1:length(x)-1
         vx = x[i]
         for j in i+1:length(x)
             vy = x[j]
-            imol = _mol_indices(i, n_atoms_per_molecule_x)
-            jmol = _mol_indices(j, n_atoms_per_molecule_x)
+            imol = _mol_indices(i, xn_atoms_per_molecule)
+            jmol = _mol_indices(j, xn_atoms_per_molecule)
             if imol == jmol
                 continue
             end
@@ -33,16 +37,20 @@ function naive_md(x, n_atoms_per_molecule_x::Int, box::Box)
 end
 
 # For disjoint sets, returning only one list
-function naive_md(x, y, n_atoms_per_molecule_x::Int, box::Box)
-    x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))
+function naive_md(x, y, xn_atoms_per_molecule::Int, unitcell::AbstractVecOrMat, cutoff::Real)
+    box = Box(unitcell, cutoff)
+    naive_md(x, y, xn_atoms_per_molecule, box)
+end
+function naive_md(x, y, xn_atoms_per_molecule, box)
+    x_list = init_list(x, i -> _mol_indices(i, xn_atoms_per_molecule))
     for (i, vx) in pairs(x)
         for (j, vy) in pairs(y)
-            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
+            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box.unit_cell.matrix)
             d = sqrt(sum(abs2, vy_wrapped - vx))
             if d > box.cutoff
                 continue
             end
-            imol = _mol_indices(i, n_atoms_per_molecule_x)
+            imol = _mol_indices(i, xn_atoms_per_molecule)
             if d < x_list[imol].d
                 x_list[imol] = MinimumDistance(true, i, j, d)
             end
@@ -52,9 +60,13 @@ function naive_md(x, y, n_atoms_per_molecule_x::Int, box::Box)
 end
 
 # For disjoint sets, returning both lists
-function naive_md(x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int, box::Box)
-    x_list = init_list(x, i -> _mol_indices(i, n_atoms_per_molecule_x))
-    y_list = init_list(y, i -> _mol_indices(i, n_atoms_per_molecule_y))
+function naive_md(x, y, xn_atoms_per_molecule::Int, yn_atoms_per_molecule::Int, unitcell::AbstractVecOrMat, cutoff::Real)
+    box = Box(unitcell, cutoff)
+    naive_md(x, y, xn_atoms_per_molecule, yn_atoms_per_molecule, box)
+end
+function naive_md(x, y, xn_atoms_per_molecule, yn_atoms_per_molecule, box)
+    x_list = init_list(x, i -> _mol_indices(i, xn_atoms_per_molecule))
+    y_list = init_list(y, i -> _mol_indices(i, yn_atoms_per_molecule))
     for (i, vx) in pairs(x)
         for (j, vy) in pairs(y)
             vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
@@ -62,11 +74,11 @@ function naive_md(x, y, n_atoms_per_molecule_x::Int, n_atoms_per_molecule_y::Int
             if d > box.cutoff
                 continue
             end
-            imol = _mol_indices(i, n_atoms_per_molecule_x)
+            imol = _mol_indices(i, xn_atoms_per_molecule)
             if d < x_list[imol].d
                 x_list[imol] = MinimumDistance(true, i, j, d)
             end
-            jmol = _mol_indices(j, n_atoms_per_molecule_y)
+            jmol = _mol_indices(j, yn_atoms_per_molecule)
             if d < y_list[jmol].d
                 y_list[jmol] = MinimumDistance(true, j, i, d)
             end
@@ -153,9 +165,9 @@ end
 function plot_md!(
     p,
     x, 
-    n_atoms_per_molecule_x::Int,
+    xn_atoms_per_molecule::Int,
     y, 
-    n_atoms_per_molecule_y::Int,
+    yn_atoms_per_molecule::Int,
     md::List;
     x_cycle=false,
     y_cycle=false
@@ -166,8 +178,8 @@ function plot_md!(
         yp = [ x[pair.i][2], y[pair.j][2] ]
         Main.plot!(p, xp, yp, label=:none, linewidth=2, color=:black, alpha=0.3)
     end
-    plot_mol!(p, x, n_atoms_per_molecule_x; cycle=x_cycle, markercolor=:red)
-    plot_mol!(p, y, n_atoms_per_molecule_y; cycle=y_cycle, markercolor=:blue)
+    plot_mol!(p, x, xn_atoms_per_molecule; cycle=x_cycle, markercolor=:red)
+    plot_mol!(p, y, yn_atoms_per_molecule; cycle=y_cycle, markercolor=:blue)
 end
 
 download_example() =
