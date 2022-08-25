@@ -37,7 +37,7 @@ end
 
         sys = SelfPairs(xpositions=x, cutoff=cutoff, mol_indices=i -> _mol_indices(i, 3), unitcell=unitcell, parallel=parallel)
         minimum_distances!(sys)
-        @test getlist(sys) ≈ x_list_naive
+        @test sys.minimum_distances ≈ x_list_naive
 
     end
 
@@ -65,7 +65,7 @@ end
 
         sys = CrossPairs(xpositions=x, ypositions=y, cutoff=cutoff, unitcell=unitcell, xn_atoms_per_molecule=5, parallel=parallel)
         minimum_distances!(sys)
-        @test getlist(sys) ≈ x_list_naive
+        @test sys.minimum_distances ≈ x_list_naive
 
     end
 

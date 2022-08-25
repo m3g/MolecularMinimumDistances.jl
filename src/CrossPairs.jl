@@ -11,6 +11,7 @@ struct CrossPairs{T,F<:Function} <: SystemPairs
     system::T
     mol_indices::F
 end
+CrossPairs(system::S, mol_indices::F) where {S,F} = CrossPairs{S,F,:minimum_distances}(system,mol_indices)
 
 import Base.show
 function Base.show(io::IO, mime::MIME"text/plain", sys::CrossPairs)
@@ -20,7 +21,7 @@ function Base.show(io::IO, mime::MIME"text/plain", sys::CrossPairs)
     Number of atoms of set x: $(length(sys.system.xpositions))
     Number of molecules in set x: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))
     Number of atoms of target structure y: $(length(sys.system.ypositions))
-    Cutoff: $(sys.system._box.cutoff)
+    Cutoff: $(sys.cutoff)
     unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]""")
 end
 

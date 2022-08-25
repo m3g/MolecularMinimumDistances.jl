@@ -257,7 +257,7 @@ function minimum_distances!(sys)
         (x, y, i, j, d2, list) -> update_list!(i, j, d2, list, sys),
         sys.system
     )
-    return getlist(sys)
+    return sys.minimum_distances
 end
 
 """
@@ -432,7 +432,21 @@ function minimum_distances(;
 end
 
 abstract type SystemPairs end
-getlist(sys::SystemPairs) = sys.system.output
+
+import Base: getproperty, propertynames
+getproperty(sys::SystemPairs, s::Symbol) = getproperty(sys, Val(s))
+getproperty(sys::SystemPairs, ::Val{:system}) = getfield(sys,:system)
+getproperty(sys::SystemPairs, ::Val{:mol_indices}) = getfield(sys,:mol_indices)
+getproperty(sys::SystemPairs, ::Val{:xmol_indices}) = getfield(sys,:xmol_indices)
+getproperty(sys::SystemPairs, ::Val{:ymol_indices}) = getfield(sys,:ymol_indices)
+getproperty(sys::SystemPairs, ::Val{:minimum_distances}) = sys.system.output
+getproperty(sys::SystemPairs, ::Val{:xpositions}) = sys.system.xpositions
+getproperty(sys::SystemPairs, ::Val{:ypositions}) = sys.system.ypositions
+getproperty(sys::SystemPairs, ::Val{:cutoff}) = sys.system.cutoff
+getproperty(sys::SystemPairs, ::Val{:unitcell}) = sys.system.unitcell
+getproperty(sys::SystemPairs, ::Val{:parallel}) = sys.parallel
+propertynames(sys::SystemPairs, private::Bool) = 
+    (:system, :mol_indices, :minimum_distances, :xpositions, :ypositions, :unitcell, :cutoff)
 
 #
 # Functions for when the lists of minimum-distances is that of a single

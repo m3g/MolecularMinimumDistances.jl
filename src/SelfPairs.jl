@@ -83,7 +83,7 @@ function SelfPairs(;
 ) where {N,T<:Real}
     mol_indices = _get_mol_indices(mol_indices, xn_atoms_per_molecule)
     system = PeriodicSystem(;
-        positions=xpositions,
+        xpositions=xpositions,
         cutoff=cutoff,
         unitcell=unitcell,
         output=init_list(xpositions, mol_indices),
