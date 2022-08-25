@@ -1,18 +1,84 @@
 # Advanced usage
 
-## Array preallocation
+## System build and update
 
-The advanced usage of this package exposes the interface of `CellListMap`, such that it is possible to iterate through sets varying coordinates and perhaps box types without need for reallocating lists of neighbors every time.  
+If the molecular minimum distances will be computed many times for similar systems, it is possible
+to construct the system and update its properties. The use of the interface of `CellListMap.PeriodicSystems`
+is required (requires `CellListMap` version 0.7.24 or greater). 
 
-Basically, preallocation is needed for:
+For example, let us build one system with a protein and water:
 
-- The cell lists.
-- The resulting lists of minimum-distances. 
+```julia-repl
+julia> using MolecularMinimumDistances, PDBTools
 
-And for parallel runs (probably the most common ones):
+julia> system = MolecularMinimumDistances.download_example();
 
-- Auxiliary arrays for storing threaded versions of the cell lists.
-- Auxiliary arrays for storing threaded versions of the resulting lists of minimum-distances. 
+julia> protein = coor(system, "protein");
+
+julia> water = coor(system, "water");
+```
+
+We now build the `CrossPairs`  type of system, instead of calling the `minimum_distances` function directly:
+
+```julia-repl
+julia> sys = CrossPairs(
+           xpositions=water, # solvent
+           ypositions=protein, # solute
+           xn_atoms_per_molecule=3,
+           cutoff=12.0,
+           unitcell=[84.48, 84.48, 84.48]
+       )
+CrossPairs system with:
+
+Number of atoms of set x: 58014
+Number of molecules in set x: 19338
+Number of atoms of target structure y: 1463
+Cutoff: 12.0
+unitcell: [84.48, 0.0, 0.0, 0.0, 84.48, 0.0, 0.0, 0.0, 84.48]
+```
+
+Now `sys`  contains the necessary arrays for computing the list of minimum distances. We use now the
+`minimum_distances!`  function (with the `!`), to update that list:
+```julia-repl
+julia> minimum_distances!(sys)
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ ⋮
+ MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+```
+
+The system can be now updated: the positions, cutoff, or unitcell can be modified, with the 
+following interfaces:
+
+### Updating positions
+
+To update the positions, modify the `sys.system.xpositions` (`ypositions`)  array. We will
+boldy demonstrate this by making the first atom of the `x` set to be close to the first
+atom of the protein, and recomputing the distances:
+```julia-repl
+julia> using StaticArrays
+
+julia> sys.system.xpositions[2] = sys.system.ypositions[1] + SVector(1.0,0.0,0.0);
+
+julia> minimum_distances!(sys)
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 2, 4, 0.9202923448556931)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ ⋮
+ MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+```
+
+### Updating the cutoff
+
+The cutoff used can be updated with the `PeriodicSystems.update_
+
+
+
 
 ## Index of molecules
 
