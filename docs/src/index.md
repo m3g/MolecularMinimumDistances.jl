@@ -39,7 +39,7 @@ julia> system = MolecularMinimumDistances.download_example()
 Next, we extract the protein coordinates, and the TMAO coordinates:
 
 ```julia-repl
-julia> xprot = coor(system,"protein")
+julia> protein = coor(system,"protein")
 1463-element Vector{SVector{3, Float64}}:
  [-9.229, -14.861, -5.481]
  [-10.048, -15.427, -5.569]
@@ -48,7 +48,7 @@ julia> xprot = coor(system,"protein")
  [6.408, -12.034, -8.343]
  [6.017, -10.967, -9.713]
 
-julia> xtmao = coor(system,"resname TMAO")
+julia> tmao = coor(system,"resname TMAO")
 2534-element Vector{SVector{3, Float64}}:
  [-23.532, -9.347, 19.545]
  [-23.567, -7.907, 19.381]
@@ -64,8 +64,8 @@ Finally, we find all the TMAO molecules having at least one atom closer than 12 
 
 ```julia-repl
 julia> list = minimum_distances(
-           xpositions=xtmao, # solvent
-           ypositions=xprot, # solute
+           xpositions=tmao, # solvent
+           ypositions=protein, # solute
            xn_atoms_per_molecule=14,
            cutoff=12.0,
            unitcell=[83.115, 83.044, 83.063]
@@ -86,7 +86,7 @@ Thus, 33 TMAO molecules are within the cutoff distance from the protein, and the
 
 This package exists because this computation is fast. For example, let us choose the water molecules instead, and benchmark the time required to compute these set of distances:
 ```julia-repl
-julia> xwat = coor(system,"resname TIP3")
+julia> water = coor(system,"resname TIP3")
 58014-element Vector{SVector{3, Float64}}:
  [-28.223, 19.92, -27.748]
  [-27.453, 20.358, -27.476]
@@ -98,8 +98,8 @@ julia> xwat = coor(system,"resname TIP3")
 julia> using BenchmarkTools
 
 julia> @btime minimum_distances(
-           xpositions=$xwat, # solvent
-           ypositions=$xprot, # solute
+           xpositions=$water, # solvent
+           ypositions=$protein, # solute
            xn_atoms_per_molecule=3,
            cutoff=12.0,
            unitcell=[83.115, 83.044, 83.063]
@@ -110,7 +110,7 @@ julia> @btime minimum_distances(
 To compare, a naive algorithm to compute the same thing takes:
 
 ```julia-repl
-julia> @btime MolecularMinimumDistances.naive_md($xwat, $xprot, 3, [83.115, 83.044, 83.063], 12.0);
+julia> @btime MolecularMinimumDistances.naive_md($water, $protein, 3, [83.115, 83.044, 83.063], 12.0);
   2.488 s (97 allocations: 609.16 KiB)
 ```
 
@@ -118,9 +118,9 @@ And the computation can be made faster and in-place using the more advanced inte
 
 ```julia-repl
 julia> sys = CrossPairs(
-           xpositions=xwat, # solvent
-           ypositions=xprot, # solute
-           xn_atoms_per_molecule=14,
+           xpositions=water, # solvent
+           ypositions=protein, # solute
+           xn_atoms_per_molecule=3,
            cutoff=12.0,
            unitcell=[83.115, 83.044, 83.063]
        )
@@ -136,12 +136,12 @@ julia> @btime minimum_distances!($sys);
   2.969 ms (196 allocations: 22.80 KiB)
 ```
 
-Most remaining allocations occur only for the launching of multiple threads:
+And the remaining allocations occur only for the launching of multiple threads:
 
 ```julia-repl
 julia> sys = CrossPairs(
-           xpositions=xwat, # solvent
-           ypositions=xprot, # solute
+           xpositions=water, # solvent
+           ypositions=protein, # solute
            xn_atoms_per_molecule=14,
            cutoff=12.0,
            unitcell=[83.115, 83.044, 83.063],
@@ -149,7 +149,7 @@ julia> sys = CrossPairs(
        );
 
 julia> @btime minimum_distances!($sys);
-  15.249 ms (7 allocations: 576 bytes)
+  15.249 ms (0 allocations: 0 bytes)
 ```
 
 ## Details of the illustration
