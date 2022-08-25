@@ -95,6 +95,7 @@ function CrossPairs(;
         cutoff=cutoff,
         unitcell=unitcell,
         output=init_list(xpositions, xmol_indices),
+        output_name=:minimum_distances,
         parallel=parallel
     )
     return CrossPairs(system, xmol_indices)

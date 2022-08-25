@@ -87,6 +87,7 @@ function SelfPairs(;
         cutoff=cutoff,
         unitcell=unitcell,
         output=init_list(positions, mol_indices),
+        output_name=:minimum_distances,
         parallel=parallel
     )
     return SelfPairs(system, mol_indices)

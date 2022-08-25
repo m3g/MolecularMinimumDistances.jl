@@ -104,6 +104,7 @@ function AllPairs(;
         cutoff=cutoff,
         unitcell=unitcell,
         output=(init_list(xpositions, xmol_indices), init_list(ypositions, ymol_indices)),
+        output_name=:minimum_distances,
         parallel=parallel
     )
     return AllPairs(system, xmol_indices, ymol_indices)
