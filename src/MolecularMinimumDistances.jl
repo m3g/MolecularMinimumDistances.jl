@@ -226,10 +226,10 @@ calculations.
 julia> using MolecularMinimumDistances, StaticArrays
 
 julia> sys = SelfPairs(
-           positions = rand(SVector{3,Float64},1000), 
+           xpositions = rand(SVector{3,Float64},1000), 
            unitcell=[1,1,1], 
            cutoff = 0.1, 
-           n_atoms_per_molecule=10,
+           xn_atoms_per_molecule=10,
        )
 SelfPairs system with:
 
@@ -264,13 +264,13 @@ end
 
 ```
 function minimum_distances(
-   positions=rand(SVector{3,Float64},10^5),
-   # or xpositions *and* ypositions
+   xpositions=rand(SVector{3,Float64},10^5),
+   # or xpositions *and* ypositions (CrossPairs or AllPairs)
    cutoff=0.1,
    unitcell=[1,1,1],
-   n_atoms_per_molecule=5
-   # or xn_atoms_per_molecule 
-   # or xn_atoms_per_molecule *and* yn_atoms_per_molecule
+   xn_atoms_per_molecule=5
+   # or xn_atoms_per_molecule (CrossPairs)
+   # or xn_atoms_per_molecule *and* yn_atoms_per_molecule (AllPairs)
 )
 ```
 
@@ -279,7 +279,7 @@ Depending on the number of input position arrays provided and on the number
 of molecular index information provided, a different type of calculation is
 performed:
 
-- If `positions` and `n_atoms_per_molecule` are provided, the minimum distances
+- If `xpositions` and `xn_atoms_per_molecule` are provided, the minimum distances
   within the set of molecules of the set provided are computed. 
 
 - If `xpositions` and `ypositions` are provided, and **only** `xn_atoms_per_molecule`
@@ -292,7 +292,7 @@ performed:
   distances is returned, with lengths corresponding to the number of molecules
   of sets `x` and `y`, respectively.
 
-As for the other functions are constructors, the `n_atoms_per_molecule` keyword
+As for the other functions are constructors, the `xn_atoms_per_molecule` keyword
 parameters can be substituted by a general function which returns the molecular 
 index of the molecule of each atom (i. e. `(i) -> (i-1)%n_atoms_per_molecule + 1`
 in the simplest and default case).
@@ -308,10 +308,10 @@ with a length equal to the number of molecules of the set.
 julia> using MolecularMinimumDistances, StaticArrays
 
 julia> list = minimum_distances(
-           positions = rand(SVector{3,Float64},10^5), 
+           xpositions = rand(SVector{3,Float64},10^5), 
            unitcell=[1,1,1], 
            cutoff = 0.1, 
-           n_atoms_per_molecule=10)
+           xn_atoms_per_molecule=10)
 10000-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(true, 5, 71282, 0.007669490894775502)
  MinimumDistance{Float64}(true, 19, 36374, 0.005280726329888545)
@@ -377,7 +377,6 @@ julia> lists[2]
 
 """
 function minimum_distances(;
-    positions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
     xpositions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
     ypositions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
     cutoff::T,
@@ -385,16 +384,15 @@ function minimum_distances(;
     mol_indices::Union{Nothing,Function}=nothing,
     xmol_indices::Union{Nothing,Function}=nothing,
     ymol_indices::Union{Nothing,Function}=nothing,
-    n_atoms_per_molecule::Union{Nothing,Int}=nothing,
     xn_atoms_per_molecule::Union{Nothing,Int}=nothing,
     yn_atoms_per_molecule::Union{Nothing,Int}=nothing,
     parallel=true
 ) where {N,T}
     # SelfPairs
-    if !isnothing(positions)
-        mol_indices = _get_mol_indices(mol_indices, n_atoms_per_molecule)
+    if isnothing(ypositions)
+        mol_indices = _get_mol_indices(mol_indices, xn_atoms_per_molecule)
         system = SelfPairs(;
-            positions=positions,
+            xpositions=xpositions,
             cutoff=cutoff,
             unitcell=unitcell,
             mol_indices=mol_indices,

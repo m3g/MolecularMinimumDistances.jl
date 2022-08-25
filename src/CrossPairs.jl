@@ -17,11 +17,11 @@ function Base.show(io::IO, mime::MIME"text/plain", sys::CrossPairs)
     print(io,"""
     CrossPairs system with:
 
-    Number of atoms of set: $(length(sys.system.xpositions))
-    Number of atoms of target structure: $(length(sys.system.ypositions))
+    Number of atoms of set x: $(length(sys.system.xpositions))
+    Number of molecules in set x: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))
+    Number of atoms of target structure y: $(length(sys.system.ypositions))
     Cutoff: $(sys.system._box.cutoff)
-    unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]
-    Number of molecules in set: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))""")
+    unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]""")
 end
 
 """

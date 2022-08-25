@@ -17,20 +17,20 @@ function Base.show(io::IO, mime::MIME"text/plain", sys::SelfPairs)
     print(io,"""
     SelfPairs system with:
 
-    Number of atoms: $(length(sys.system.positions))
+    Number of atoms: $(length(sys.system.xpositions))
     Cutoff: $(sys.system._box.cutoff)
     unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]
-    Number of molecules: $(_number_of_molecules(sys.mol_indices, sys.system.positions))""")
+    Number of molecules: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))""")
 end
 
 """
 
 ```
 SelfPairs(;
-    positions::AbstractVector{<:SVector{N,T}},
+    xpositions::AbstractVector{<:SVector{N,T}},
     cutoff::T,
     unitcell::AbstractVecOrMat,
-    n_atoms_per_molecule::Int,
+    xn_atoms_per_molecule::Int,
     parallel::Bool=true
 ) where T<:Real
 ```
@@ -52,10 +52,10 @@ atoms and are continously stored in the array of positions).
 julia> using MolecularMinimumDistances, StaticArrays
 
 julia> sys = SelfPairs(
-           positions=rand(SVector{3,Float64},10^5),
+           xpositions=rand(SVector{3,Float64},10^5),
            cutoff=0.1,
            unitcell=[1,1,1],
-           n_atoms_per_molecule=5
+           xn_atoms_per_molecule=5
        )
 SelfPairs system with:
 
@@ -74,19 +74,19 @@ julia> minimum_distances!(sys)
 
 """
 function SelfPairs(;
-    positions::AbstractVector{<:SVector{N,T}},
+    xpositions::AbstractVector{<:SVector{N,T}},
     cutoff::T,
     unitcell::AbstractVecOrMat,
-    n_atoms_per_molecule::Union{Nothing,Int}=nothing,
+    xn_atoms_per_molecule::Union{Nothing,Int}=nothing,
     mol_indices::Union{Nothing,Function}=nothing,
     parallel::Bool=true
 ) where {N,T<:Real}
-    mol_indices = _get_mol_indices(mol_indices, n_atoms_per_molecule)
+    mol_indices = _get_mol_indices(mol_indices, xn_atoms_per_molecule)
     system = PeriodicSystem(;
-        positions=positions,
+        positions=xpositions,
         cutoff=cutoff,
         unitcell=unitcell,
-        output=init_list(positions, mol_indices),
+        output=init_list(xpositions, mol_indices),
         output_name=:minimum_distances,
         parallel=parallel
     )

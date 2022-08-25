@@ -29,13 +29,13 @@ end
 
         x_list_naive = MolecularMinimumDistances.naive_md(x, 3, unitcell, cutoff)
 
-        x_list = minimum_distances(positions=x, n_atoms_per_molecule=3, cutoff=cutoff, unitcell=unitcell, parallel=parallel)
+        x_list = minimum_distances(xpositions=x, xn_atoms_per_molecule=3, cutoff=cutoff, unitcell=unitcell, parallel=parallel)
         @test x_list ≈ x_list_naive
 
-        x_list = minimum_distances(positions=x, cutoff=cutoff, mol_indices=i -> _mol_indices(i, 3), unitcell=unitcell, parallel=parallel)
+        x_list = minimum_distances(xpositions=x, cutoff=cutoff, mol_indices=i -> _mol_indices(i, 3), unitcell=unitcell, parallel=parallel)
         @test x_list ≈ x_list_naive
 
-        sys = SelfPairs(positions=x, cutoff=cutoff, mol_indices=i -> _mol_indices(i, 3), unitcell=unitcell, parallel=parallel)
+        sys = SelfPairs(xpositions=x, cutoff=cutoff, mol_indices=i -> _mol_indices(i, 3), unitcell=unitcell, parallel=parallel)
         minimum_distances!(sys)
         @test getlist(sys) ≈ x_list_naive
 
