@@ -184,17 +184,3 @@ end
 
 download_example() =
     Main.PDBTools.readPDB(download("https://raw.githubusercontent.com/m3g/ComplexMixtures.jl/master/test/data/NAMD/structure.pdb"))
-
-
-inds(i) = _mol_indices(i,3)
-function iterate_lists(nsteps, list, list_threaded, water, protein, box, cl, aux; parallel = true)
-   for i in 1:nsteps
-       # water and protein coordinates, and box, could change here
-       cl = UpdateCellList!(water, protein, box, cl, aux; parallel = parallel)
-       minimum_distances!(inds, list, box, cl; 
-           parallel = parallel,
-           list_threaded = list_threaded
-       )
-       # list was updated
-   end
-end
