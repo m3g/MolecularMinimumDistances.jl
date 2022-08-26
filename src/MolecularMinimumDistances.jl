@@ -444,9 +444,15 @@ getproperty(sys::SystemPairs, ::Val{:xpositions}) = sys.system.xpositions
 getproperty(sys::SystemPairs, ::Val{:ypositions}) = sys.system.ypositions
 getproperty(sys::SystemPairs, ::Val{:cutoff}) = sys.system.cutoff
 getproperty(sys::SystemPairs, ::Val{:unitcell}) = sys.system.unitcell
-getproperty(sys::SystemPairs, ::Val{:parallel}) = sys.parallel
+getproperty(sys::SystemPairs, ::Val{:parallel}) = sys.system.parallel
 propertynames(sys::SystemPairs, private::Bool) = 
     (:system, :mol_indices, :minimum_distances, :xpositions, :ypositions, :unitcell, :cutoff)
+
+import Base: setproperty!
+setproperty!(sys::SystemPairs, s::Symbol, value) = setproperty!(sys, Val(s), value)
+setproperty!(sys::SystemPairs, ::Val{:cutoff}, cutoff) = update_cutoff!(sys.system, cutoff)
+setproperty!(sys::SystemPairs, ::Val{:unitcell}, unitcell) = update_unitcell!(sys.system, unitcell)
+setproperty!(sys::SystemPairs, ::Val{:parallel}, parallel) = sys.system.parallel = parallel 
 
 #
 # Functions for when the lists of minimum-distances is that of a single
