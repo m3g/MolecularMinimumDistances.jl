@@ -1,14 +1,16 @@
 name = "MolecularMinimumDistances"
 uuid = "46954fcc-1dd7-4352-b01d-a39240e91dc8"
 authors = ["Leandro Martinez <leandro@iqm.unicamp.br> and contributors"]
-version = "0.3.3-DEV"
+version = "0.4.0"
 
 [deps]
 CellListMap = "69e1c6dd-3888-40e6-b3c8-31ac5f578864"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+CellListMap = "0.7.24"
 julia = "1.6"
-CellListMap = "0.7.13"
 
 [extras]
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

@@ -1,4 +1,4 @@
-# User guide
+# Basic user guide
 
 Here the usage of the functions that allocate the list of distances will be described. Different running modes are available depending on the expected output.
 
@@ -16,7 +16,7 @@ julia> using MolecularMinimumDistances
 
 The examples here use a molecular system, but the package actually only considers the coordinates of the atoms and the number of atoms of each molecule. Thus, more general distance problems can be tackled.
 
-The input of the following tests can be obtained with:
+The input atomic positions used in the following examples can be obtained with:
 
 ```julia-repl
 julia> using PDBTools
@@ -35,9 +35,9 @@ julia> system = MolecularMinimumDistances.download_example()
 ```
 The system consists of a protein (with 1463 atoms), solvated by 181 TMAO molecules (with 14 atoms each), 19338 water molecules, and some ions. 
 
-This is a snapshot of a simulation which was performed with cubic periodic boundary conditions, with a box side of `84.48` Angstrom. We will use periodic boundary conditions in the examples. 
+These coordinates belong to a snapshot of a simulation which was performed with cubic periodic boundary conditions, with a box side of `84.48` Angstrom. 
 
-The coordinates of each of the types of molecules can be extracted from the `system` array of atoms with (using `PDBTools` - v0.13 or greater):
+The coordinates of each of the types of molecules can be extracted from the `system` array of atoms with (using `PDBTools` - `v0.13` or greater):
 
 ```julia-repl
 julia> protein = coor(system,"protein")
@@ -72,17 +72,18 @@ Using these vectors of coordinates, we will illustrate the use of the current pa
 
 ## Shortest distances from a solute
 
-The simplest usage consists of finding for each molecule of one set the atoms of the other set which are closer to them. For example, if we want the atoms of the proteins which are closer to each TMAO molecule (14 atoms), within a cutoff of `12.0` Angstroms, we do:
+The simplest usage consists of finding for each molecule of one set the atoms of the other set which are closer to them. For example, here we want the atoms of the proteins which are closer to each TMAO molecule (14 atoms), within a cutoff of `12.0` Angstroms.
 
-!!! note
-    If the solute has more than one molecule, this will not be taken into 
-    consideration in this mode. All molecules will be considered as part
-    of the same structure (the number of atoms per molecule of the `protein` is not a parameter here).
-
-### Without periodic boundary conditions
+The simulations was performed with periodic boundary conditions, in a cubic box of sides `[84.48, 84.48, 84.48]`. We compute the minimum distances with:
 
 ```julia-repl
-julia> list = minimum_distances(tmao, protein, 14, 12.0)
+julia> list = minimum_distances(
+           xpositions=tmao, # solvent
+           ypositions=protein, # solute
+           xn_atoms_per_molecule=14,
+           cutoff=12.0,
+           unitcell=[84.48, 84.48, 84.48]
+       )
 181-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(false, 0, 0, Inf)
  MinimumDistance{Float64}(false, 0, 0, Inf)
@@ -92,68 +93,25 @@ julia> list = minimum_distances(tmao, protein, 14, 12.0)
  MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
 ```
 
-The list obtained contains, for each molecule of TMAO, a structure of type `MinimumDistance`, containing:
-1. A boolean marker, which is `true` if some protein atom was found within the desired cutoff, `false` otherwise (field `x.within_cutoff`).
-2. The index of the TMAO atom (field `x.i`).
-3. The index of the protein atom (field `x.j`).
-4. The distance between these atoms (field `x.d`).
-
-For instance, the number of molecules of TMAO having a protein atom within the cutoff are, here:
+The `list` contains, for each *molecule* of TMAO, a `MinimumDistance` object, containing the following fields, 
+exemplified by printing the last entry of the list:
 ```julia-repl
-julia> count(x -> x.within_cutoff, list)
-33
+julia> list[end]
+MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
+
+Distance within cutoff, within_cutoff = true
+x atom of pair, i = 2526
+y atom of pair, j = 97
+Distance found, d = 9.652277658666891
 ```
 
-For each molecule of water, he have, similarly:
+The fields `within_cutoff`, `i`, `j`, and `d` show if a distance was found within the cutoff,
+the indexes of the atoms involved in the contact, and their distance.
 
-```julia-repl
-julia> list = minimum_distances(water,protein,3,12.)
-19338-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
- ⋮
- MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
- MinimumDistance{Float64}(false, 0, 0, Inf)
-
-julia> count(x -> x.within_cutoff, list)
-2251
-```
-
-A pictorial representation of this result, for a simpler system, is:
-
-![solute-solvent](./assets/nearest.png)
-
-This figure illustrate that all distances between the solute (blue) and the closet atoms of each solvent molecule (red) were found, within the desired cutoff. 
-
-### With periodic boundary conditions
-
-The example simulation was performed with cubic periodic boundary conditions. Let us provide the box information now. We will exemplify with the calculation of the nearest atoms of the water molecules. The interface here is that define by the `Box` constructor of `CellListMap.jl`, described in detail [here](https://m3g.github.io/CellListMap.jl/stable/pbc/). General periodic boundary conditions are supported. 
-
-The box here is cubic, and we need to provide to the `Box` constructor the sides and the cutoff:
-
-```julia-repl
-julia> box = Box([84.48, 84.48, 84.48], 12.)
-Box{CellListMap.OrthorhombicCell, 3, Float64, Float64, 9}
-  unit cell matrix = [ 84.48, 0.0, 0.0; 0.0, 84.48, 0.0; 0.0, 0.0, 84.48 ]
-  cutoff = 12.0
-  number of computing cells on each dimension = [9, 9, 9]
-  computing cell sizes = [12.06857142857143, 12.06857142857143, 12.06857142857143] (lcell: 1)
-  Total number of cells = 729
-```
-
-And the `minimum_distance` function is called with the `box` instead of the `cutoff`:
-
-```julia-repl
-julia> list = minimum_distances(water,protein,3,box)
-19338-element Vector{MinimumDistance{Float64}}:
- MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
- MinimumDistance{Float64}(false, 0, 0, Inf)
- ⋮
- MinimumDistance{Float64}(true, 58011, 383, 10.24673074692606)
- MinimumDistance{Float64}(false, 0, 0, Inf)
-```
+!!! note
+    If the solute has more than one molecule, this will not be taken into 
+    consideration in this mode. All molecules will be considered as part
+    of the same structure (the number of atoms per molecule of the `protein` is not a parameter here).
 
 ## All shortest distances
 
@@ -164,7 +122,14 @@ In the example, we can compute for each TMAO molecule, which is the closest atom
 is that now wee need to provide the number of atoms of both TMAO and water:
 
 ```julia-repl
-julia> water_list, tmao_list = minimum_distances(water, tmao, 3, 14, box);
+julia> water_list, tmao_list = minimum_distances(
+           xpositions=water,
+           ypositions=tmao,
+           xn_atoms_per_molecule=3,
+           yn_atoms_per_molecule=14,
+           unitcell=[84.48, 84.48, 84.48],
+           cutoff=12.0
+       );
 
 julia> water_list
 19338-element Vector{MinimumDistance{Float64}}:
@@ -195,7 +160,12 @@ There is an interface to compute the shortest distances of molecules within a se
 A typical call would be:
 
 ```julia-repl
-julia> list = minimum_distances(water, 3, box)
+julia> water_list = minimum_distances(
+           positions=water,
+           n_atoms_per_molecule=3,
+           unitcell=[84.48, 84.48, 84.48],
+           cutoff=12.0
+       )
 19338-element Vector{MinimumDistance{Float64}}:
  MinimumDistance{Float64}(true, 2, 33977, 2.1997806708851724)
  MinimumDistance{Float64}(true, 4, 43684, 2.1994928961012814)
@@ -211,10 +181,6 @@ A pictorial representation of a result of this type is, for a simpler system:
 ![self pairs](./assets/self_pair.png)
 
 This can be used for the identification of connectivity networks, for example, or for some types of clustering.
-
-!!! note
-    All the function accept either a `cutoff` (a `Real` value) or a `Box` in the same argument positions. If the cutoff only is provided, it is assumed that no periodic boundary conditions are used. 
-
 
 
 
