@@ -84,7 +84,7 @@ Thus, 33 TMAO molecules are within the cutoff distance from the protein, and the
 
 ## Performance
 
-This package exists because this computation is fast. For example, let us choose the water molecules instead, and benchmark the time required to compute these set of distances:
+This package exists because this computation is fast. For example, let us choose the water molecules instead, and benchmark the time required to compute this set of distances:
 ```julia-repl
 julia> water = coor(system,"resname TIP3")
 58014-element Vector{SVector{3, Float64}}:
@@ -107,7 +107,8 @@ julia> @btime minimum_distances(
   6.288 ms (3856 allocations: 13.03 MiB)
 ```
 
-To compare, a naive algorithm to compute the same thing takes:
+To compare, a naive algorithm to compute the same thing takes roughly 400x more for this
+system size:
 
 ```julia-repl
 julia> @btime MolecularMinimumDistances.naive_md($water, $protein, 3, [83.115, 83.044, 83.063], 12.0);
@@ -136,7 +137,7 @@ julia> @btime minimum_distances!($sys);
   2.969 ms (196 allocations: 22.80 KiB)
 ```
 
-And the remaining allocations occur only for the launching of multiple threads:
+The remaining allocations occur only for the launching of multiple threads:
 
 ```julia-repl
 julia> sys = CrossPairs(
@@ -154,7 +155,7 @@ julia> @btime minimum_distances!($sys);
 
 ## Details of the illustration
 
-The initial illustration here consists of a toy solute-solvent example, where the solute is a approximately hexagonal molecule, and the solvent is composed by 40 diatomic molecules. The toy system is built as follows:
+The initial illustration here consists of a toy solute-solvent example, where the solute is an approximately hexagonal molecule, and the solvent is composed by 40 diatomic molecules. The toy system is built as follows:
 
 ```julia
 using MolecularMinimumDistances, StaticArrays

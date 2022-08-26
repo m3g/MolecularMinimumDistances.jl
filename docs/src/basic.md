@@ -1,4 +1,4 @@
-# User guide
+# Basic user guide
 
 Here the usage of the functions that allocate the list of distances will be described. Different running modes are available depending on the expected output.
 
@@ -16,7 +16,7 @@ julia> using MolecularMinimumDistances
 
 The examples here use a molecular system, but the package actually only considers the coordinates of the atoms and the number of atoms of each molecule. Thus, more general distance problems can be tackled.
 
-The input of the following tests can be obtained with:
+The input atomic positions used in the following examples can be obtained with:
 
 ```julia-repl
 julia> using PDBTools
@@ -35,9 +35,9 @@ julia> system = MolecularMinimumDistances.download_example()
 ```
 The system consists of a protein (with 1463 atoms), solvated by 181 TMAO molecules (with 14 atoms each), 19338 water molecules, and some ions. 
 
-This is a snapshot of a simulation which was performed with cubic periodic boundary conditions, with a box side of `84.48` Angstrom. We will use periodic boundary conditions in the examples. 
+These coordinates belong to a snapshot of a simulation which was performed with cubic periodic boundary conditions, with a box side of `84.48` Angstrom. 
 
-The coordinates of each of the types of molecules can be extracted from the `system` array of atoms with (using `PDBTools` - v0.13 or greater):
+The coordinates of each of the types of molecules can be extracted from the `system` array of atoms with (using `PDBTools` - `v0.13` or greater):
 
 ```julia-repl
 julia> protein = coor(system,"protein")
