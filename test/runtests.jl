@@ -1,9 +1,13 @@
 using Test
+using TestItemRunner
 using StaticArrays
 using MolecularMinimumDistances
 import MolecularMinimumDistances: init_list, _mol_indices
 
-@testset "Initalization functions" begin
+@testitem "Initalization functions" begin
+    using StaticArrays
+    using MolecularMinimumDistances
+    import MolecularMinimumDistances: init_list, _mol_indices
 
     x = [rand(SVector{3,Float64}) for _ in 1:12]
     #
@@ -16,7 +20,11 @@ import MolecularMinimumDistances: init_list, _mol_indices
 
 end
 
-@testset "Single set" begin
+@testitem "Single set" begin
+    using StaticArrays
+    using MolecularMinimumDistances
+    import MolecularMinimumDistances: init_list, _mol_indices
+
     # 
     # Single set of molecules
     #
@@ -43,7 +51,10 @@ end
 
 end
 
-@testset "Disjoint: one list" begin
+@testitem "Disjoint: one list" begin
+    using StaticArrays
+    using MolecularMinimumDistances
+    import MolecularMinimumDistances: init_list, _mol_indices
 
     #
     # Disjoint sets: return only one list
@@ -71,7 +82,10 @@ end
 
 end
 
-@testset "Disjoint: two lists" begin
+@testitem "Disjoint: two lists" begin
+    using StaticArrays
+    using MolecularMinimumDistances
+    import MolecularMinimumDistances: init_list, _mol_indices
 
     #
     # Disjoint sets of molecules
@@ -126,4 +140,6 @@ end
 
     end
 
-end # @testset
+end # @testitem
+
+@run_package_tests

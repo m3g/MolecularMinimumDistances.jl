@@ -1,5 +1,6 @@
 module MolecularMinimumDistances
 
+using TestItems
 using DocStringExtensions
 const INTERNAL = "Internal function or structure - interface may change."
 
