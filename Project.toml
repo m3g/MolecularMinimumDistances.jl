@@ -7,13 +7,13 @@ version = "0.4.1"
 CellListMap = "69e1c6dd-3888-40e6-b3c8-31ac5f578864"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 
 [compat]
 CellListMap = "0.7.24, 0.8"
-StaticArrays = "1"
 DocStringExtensions = "0.8, 0.9"
-TestItems = "0.1"
 StaticArrays = "1"
+TestItems = "0.1"
 julia = "1.6"
 
 [extras]
