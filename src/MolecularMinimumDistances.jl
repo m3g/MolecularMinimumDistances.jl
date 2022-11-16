@@ -190,6 +190,7 @@ import .PeriodicSystems: copy_output, reset_output!, reducer
 reset_output!(md::MinimumDistance{T}) where T = zero(MinimumDistance{T})
 reducer(md1::MinimumDistance{T}, md2::MinimumDistance{T}) where T = md1.d < md2.d ? md1 : md2
 copy_output(list::ListTuple) = (copy_output(list[1]), copy_output(list[2]))
+copy_output(x::MinimumDistance) = copy(x)
 function reset_output!(list::ListTuple)
     reset_output!(list[1])
     reset_output!(list[2])
