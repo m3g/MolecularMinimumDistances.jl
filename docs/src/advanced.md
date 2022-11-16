@@ -194,7 +194,7 @@ julia> findfirst(at -> at.resname == "TIP3", tmao_and_water)
 Thus, the `tmao_and_water` atom array has two different types of molecules, TMAO with 14 atoms, and water with 3 atoms. 
 The first atom of a water molecule is atom `2535` of the array. We extract the coordinates of the atoms with:
 ```julia-repl
-julia> coor(tmao_and_water)
+julia> solvent = coor(tmao_and_water)
 60548-element Vector{SVector{3, Float64}}:
  [-23.532, -9.347, 19.545]
  [-23.567, -7.907, 19.381]
@@ -246,7 +246,7 @@ to obtain the solvation of the protein by both TMAO and water in a single run:
 
 ```julia-repl
 julia> sys = CrossPairs(
-           xpositions=solvent, # solvent
+           xpositions=solvent, # solvent = coor(tmao_and_water)
            ypositions=protein, # solute
            xmol_indices = mol_indices,
            cutoff=12.0,

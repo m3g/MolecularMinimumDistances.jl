@@ -19,7 +19,7 @@ The examples here use a molecular system, but the package actually only consider
 The input atomic positions used in the following examples can be obtained with:
 
 ```julia-repl
-julia> using PDBTools
+julia> using MolecularMinimumDistances, PDBTools
 
 julia> system = MolecularMinimumDistances.download_example() 
    Array{Atoms,1} with 62026 atoms with fields:
@@ -161,8 +161,8 @@ A typical call would be:
 
 ```julia-repl
 julia> water_list = minimum_distances(
-           positions=water,
-           n_atoms_per_molecule=3,
+           xpositions=water,
+           xn_atoms_per_molecule=3,
            unitcell=[84.48, 84.48, 84.48],
            cutoff=12.0
        )
