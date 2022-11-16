@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Basic use · MolecularMinimumDistances.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img class="docs-light-only" src="../assets/logo.svg" alt="MolecularMinimumDistances.jl logo"/><img class="docs-dark-only" src="../assets/logo-dark.svg" alt="MolecularMinimumDistances.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">MolecularMinimumDistances.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Basic use</a><ul class="internal"><li><a class="tocitem" href="#Installation-and-loading"><span>Installation and loading</span></a></li><li><a class="tocitem" href="#Example-input-files"><span>Example input files</span></a></li><li><a class="tocitem" href="#Shortest-distances-from-a-solute"><span>Shortest distances from a solute</span></a></li><li><a class="tocitem" href="#All-shortest-distances"><span>All shortest distances</span></a></li><li><a class="tocitem" href="#Shortest-distances-within-molecules"><span>Shortest distances within molecules</span></a></li></ul></li><li><a class="tocitem" href="../advanced/">Advanced use</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Basic use</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Basic use</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/m3g/MolecularMinimumDistances.jl/blob/main/docs/src/basic.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Basic-user-guide"><a class="docs-heading-anchor" href="#Basic-user-guide">Basic user guide</a><a id="Basic-user-guide-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-user-guide" title="Permalink"></a></h1><p>Here the usage of the functions that allocate the list of distances will be described. Different running modes are available depending on the expected output.</p><h2 id="Installation-and-loading"><a class="docs-heading-anchor" href="#Installation-and-loading">Installation and loading</a><a id="Installation-and-loading-1"></a><a class="docs-heading-anchor-permalink" href="#Installation-and-loading" title="Permalink"></a></h2><p>To install <code>MolecularMinimumDistances</code>, first download and install Julia (1.6 or greater) from <a href="https://julialang.org/downloads">https://julialang.org/downloads/</a>. Install and run it. Then, use:</p><pre><code class="language-julia-repl hljs">julia&gt; import Pkg; Pkg.add(&quot;MolecularMinimumDistances&quot;)
+
+julia&gt; using MolecularMinimumDistances</code></pre><h2 id="Example-input-files"><a class="docs-heading-anchor" href="#Example-input-files">Example input files</a><a id="Example-input-files-1"></a><a class="docs-heading-anchor-permalink" href="#Example-input-files" title="Permalink"></a></h2><p>The examples here use a molecular system, but the package actually only considers the coordinates of the atoms and the number of atoms of each molecule. Thus, more general distance problems can be tackled.</p><p>The input atomic positions used in the following examples can be obtained with:</p><pre><code class="language-julia-repl hljs">julia&gt; using MolecularMinimumDistances, PDBTools
+
+julia&gt; system = MolecularMinimumDistances.download_example() 
+   Array{Atoms,1} with 62026 atoms with fields:
+   index name resname chain   resnum  residue        x        y        z  beta occup model segname index_pdb
+       1    N     ALA     A        1        1   -9.229  -14.861   -5.481  0.00  1.00     1    PROT         1
+       2  HT1     ALA     A        1        1  -10.048  -15.427   -5.569  0.00  0.00     1    PROT         2
+       3  HT2     ALA     A        1        1   -9.488  -13.913   -5.295  0.00  0.00     1    PROT         3
+                                                       ⋮ 
+   62024  OH2    TIP3     C     9339    19638   13.485   -4.534  -34.438  0.00  1.00     1    WAT2     62024
+   62025   H1    TIP3     C     9339    19638   13.218   -3.647  -34.453  0.00  1.00     1    WAT2     62025
+   62026   H2    TIP3     C     9339    19638   12.618   -4.977  -34.303  0.00  1.00     1    WAT2     62026
+</code></pre><p>The system consists of a protein (with 1463 atoms), solvated by 181 TMAO molecules (with 14 atoms each), 19338 water molecules, and some ions. </p><p>These coordinates belong to a snapshot of a simulation which was performed with cubic periodic boundary conditions, with a box side of <code>84.48</code> Angstrom. </p><p>The coordinates of each of the types of molecules can be extracted from the <code>system</code> array of atoms with (using <code>PDBTools</code> - <code>v0.13</code> or greater):</p><pre><code class="language-julia-repl hljs">julia&gt; protein = coor(system,&quot;protein&quot;)
+1463-element Vector{StaticArrays.SVector{3, Float64}}:
+ [-9.229, -14.861, -5.481]
+ [-10.048, -15.427, -5.569]
+ [-9.488, -13.913, -5.295]
+ ⋮
+ [6.408, -12.034, -8.343]
+ [6.017, -10.967, -9.713]
+
+julia&gt; tmao = coor(system,&quot;resname TMAO&quot;)
+2534-element Vector{StaticArrays.SVector{3, Float64}}:
+ [-23.532, -9.347, 19.545]
+ [-23.567, -7.907, 19.381]
+ [-22.498, -9.702, 20.497]
+ ⋮
+ [13.564, -16.517, 12.419]
+ [12.4, -17.811, 12.052]
+
+julia&gt; water = coor(system,&quot;water&quot;)
+58014-element Vector{StaticArrays.SVector{3, Float64}}:
+ [-28.223, 19.92, -27.748]
+ [-27.453, 20.358, -27.476]
+ [-27.834, 19.111, -28.148]
+ ⋮
+ [13.218, -3.647, -34.453]
+ [12.618, -4.977, -34.303]</code></pre><p>Using these vectors of coordinates, we will illustrate the use of the current package.</p><h2 id="Shortest-distances-from-a-solute"><a class="docs-heading-anchor" href="#Shortest-distances-from-a-solute">Shortest distances from a solute</a><a id="Shortest-distances-from-a-solute-1"></a><a class="docs-heading-anchor-permalink" href="#Shortest-distances-from-a-solute" title="Permalink"></a></h2><p>The simplest usage consists of finding for each molecule of one set the atoms of the other set which are closer to them. For example, here we want the atoms of the proteins which are closer to each TMAO molecule (14 atoms), within a cutoff of <code>12.0</code> Angstroms.</p><p>The simulations was performed with periodic boundary conditions, in a cubic box of sides <code>[84.48, 84.48, 84.48]</code>. We compute the minimum distances with:</p><pre><code class="language-julia-repl hljs">julia&gt; list = minimum_distances(
+           xpositions=tmao, # solvent
+           ypositions=protein, # solute
+           xn_atoms_per_molecule=14,
+           cutoff=12.0,
+           unitcell=[84.48, 84.48, 84.48]
+       )
+181-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ ⋮
+ MinimumDistance{Float64}(false, 0, 0, Inf)
+ MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)</code></pre><p>The <code>list</code> contains, for each <em>molecule</em> of TMAO, a <code>MinimumDistance</code> object, containing the following fields,  exemplified by printing the last entry of the list:</p><pre><code class="language-julia-repl hljs">julia&gt; list[end]
+MinimumDistance{Float64}(true, 2526, 97, 9.652277658666891)
+
+Distance within cutoff, within_cutoff = true
+x atom of pair, i = 2526
+y atom of pair, j = 97
+Distance found, d = 9.652277658666891</code></pre><p>The fields <code>within_cutoff</code>, <code>i</code>, <code>j</code>, and <code>d</code> show if a distance was found within the cutoff, the indexes of the atoms involved in the contact, and their distance.</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>If the solute has more than one molecule, this will not be taken into  consideration in this mode. All molecules will be considered as part of the same structure (the number of atoms per molecule of the <code>protein</code> is not a parameter here).</p></div></div><h2 id="All-shortest-distances"><a class="docs-heading-anchor" href="#All-shortest-distances">All shortest distances</a><a id="All-shortest-distances-1"></a><a class="docs-heading-anchor-permalink" href="#All-shortest-distances" title="Permalink"></a></h2><p>A similar call of the previous section can be used to compute, for each molecule of a set of molecules, which is the closest atom of every other molecule of another set. </p><p>In the example, we can compute for each TMAO molecule, which is the closest atom of water, and vice-versa. The difference from the previous call is that now wee need to provide the number of atoms of both TMAO and water:</p><pre><code class="language-julia-repl hljs">julia&gt; water_list, tmao_list = minimum_distances(
+           xpositions=water,
+           ypositions=tmao,
+           xn_atoms_per_molecule=3,
+           yn_atoms_per_molecule=14,
+           unitcell=[84.48, 84.48, 84.48],
+           cutoff=12.0
+       );
+
+julia&gt; water_list
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 2, 1512, 4.779476331147592)
+ MinimumDistance{Float64}(true, 6, 734, 2.9413928673334357)
+ MinimumDistance{Float64}(true, 8, 859, 5.701548824661595)
+ ⋮
+ MinimumDistance{Float64}(true, 58010, 1728, 3.942870781549911)
+ MinimumDistance{Float64}(true, 58014, 2058, 2.2003220218867936)
+
+julia&gt; tmao_list
+181-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 12, 22520, 2.1985345118965056)
+ MinimumDistance{Float64}(true, 20, 33586, 2.1942841657360606)
+ MinimumDistance{Float64}(true, 37, 26415, 2.1992319113726926)
+ ⋮
+ MinimumDistance{Float64}(true, 2512, 37323, 2.198738501959709)
+ MinimumDistance{Float64}(true, 2527, 33664, 2.1985044916943015)</code></pre><p>Two lists were returned, the first containing, for each water molecule, <code>MinimumDistance</code> data associated to the closest TMAO molecule (meaning the atoms involved in the contact and their distance). Similarly, the second list contains, for each TMAO molecule, the <code>MinimumDistance</code> data associated to each TMAO molecule. </p><h2 id="Shortest-distances-within-molecules"><a class="docs-heading-anchor" href="#Shortest-distances-within-molecules">Shortest distances within molecules</a><a id="Shortest-distances-within-molecules-1"></a><a class="docs-heading-anchor-permalink" href="#Shortest-distances-within-molecules" title="Permalink"></a></h2><p>There is an interface to compute the shortest distances of molecules within a set of molecules. That is, given one group of molecules, compute for each molecule which is the shortest distance among the other molecules of the same type. </p><p>A typical call would be:</p><pre><code class="language-julia-repl hljs">julia&gt; water_list = minimum_distances(
+           xpositions=water,
+           xn_atoms_per_molecule=3,
+           unitcell=[84.48, 84.48, 84.48],
+           cutoff=12.0
+       )
+19338-element Vector{MinimumDistance{Float64}}:
+ MinimumDistance{Float64}(true, 2, 33977, 2.1997806708851724)
+ MinimumDistance{Float64}(true, 4, 43684, 2.1994928961012814)
+ MinimumDistance{Float64}(true, 9, 28030, 2.1997583958244142)
+ ⋮
+ MinimumDistance{Float64}(true, 58010, 22235, 2.1992096307537414)
+ MinimumDistance{Float64}(true, 58012, 9318, 2.20003227249056)</code></pre><p>Which contains for each water molecule the atoms involved in the closest contact to any other water molecule, and the distances (within the cutoff). A pictorial representation of a result of this type is, for a simpler system:</p><p><img src="../assets/self_pair.png" alt="self pairs"/></p><p>This can be used for the identification of connectivity networks, for example, or for some types of clustering.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../advanced/">Advanced use »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Wednesday 16 November 2022 14:49">Wednesday 16 November 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
