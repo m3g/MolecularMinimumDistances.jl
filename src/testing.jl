@@ -20,7 +20,7 @@ function naive_md(x, xn_atoms_per_molecule::Int, box::Box)
             if imol == jmol
                 continue
             end
-            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
+            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box.input_unit_cell.matrix)
             d = sqrt(sum(abs2, vy_wrapped - vx))
             if d > box.cutoff
                 continue
@@ -45,7 +45,7 @@ function naive_md(x, y, xn_atoms_per_molecule, box)
     x_list = init_list(x, i -> _mol_indices(i, xn_atoms_per_molecule))
     for (i, vx) in pairs(x)
         for (j, vy) in pairs(y)
-            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box.unit_cell.matrix)
+            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box.input_unit_cell.matrix)
             d = sqrt(sum(abs2, vy_wrapped - vx))
             if d > box.cutoff
                 continue
@@ -69,7 +69,7 @@ function naive_md(x, y, xn_atoms_per_molecule, yn_atoms_per_molecule, box)
     y_list = init_list(y, i -> _mol_indices(i, yn_atoms_per_molecule))
     for (i, vx) in pairs(x)
         for (j, vy) in pairs(y)
-            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box)
+            vy_wrapped = CellListMap.wrap_relative_to(vy, vx, box.input_unit_cell.matrix)
             d = sqrt(sum(abs2, vy_wrapped - vx))
             if d > box.cutoff
                 continue
