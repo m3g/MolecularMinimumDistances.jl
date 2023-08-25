@@ -22,7 +22,7 @@ function Base.show(io::IO, mime::MIME"text/plain", sys::CrossPairs)
     Number of molecules in set x: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))
     Number of atoms of target structure y: $(length(sys.system.ypositions))
     Cutoff: $(sys.cutoff)
-    unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]""")
+    unitcell: [$(join(CellListMap._uround.(sys.system._box.input_unit_cell.matrix),", "))]""")
 end
 
 """
