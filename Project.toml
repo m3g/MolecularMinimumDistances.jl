@@ -1,7 +1,7 @@
 name = "MolecularMinimumDistances"
 uuid = "46954fcc-1dd7-4352-b01d-a39240e91dc8"
 authors = ["Leandro Martinez <lmartine@unicamp.br> and contributors"]
-version = "0.4.4-DEV"
+version = "0.4.4"
 
 [deps]
 CellListMap = "69e1c6dd-3888-40e6-b3c8-31ac5f578864"
