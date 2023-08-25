@@ -1,8 +1,10 @@
-using Test
 using TestItemRunner
-using StaticArrays
-using MolecularMinimumDistances
-import MolecularMinimumDistances: init_list, _mol_indices
+@run_package_tests
+
+@testitem "Aqua.test_all" begin
+    import Aqua
+    Aqua.test_all(MolecularMinimumDistances)
+end
 
 @testitem "Initalization functions" begin
     using StaticArrays
@@ -141,5 +143,3 @@ end
     end
 
 end # @testitem
-
-@run_package_tests

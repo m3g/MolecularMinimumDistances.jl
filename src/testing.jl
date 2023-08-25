@@ -118,19 +118,19 @@ end
 # inspection and visualization
 #
 function plot_mol!(
-    p, 
-    x; 
+    p,
+    x;
     cycle=false,
     markercolor=nothing
 )
     for i in 1:length(x)-1
-        xat = [ x[i][1], x[i+1][1] ] 
-        yat = [ x[i][2], x[i+1][2] ] 
+        xat = [x[i][1], x[i+1][1]]
+        yat = [x[i][2], x[i+1][2]]
         Main.plot!(p, xat, yat, label=:none, linewidth=2, color=:black)
     end
     if cycle
-        xat = [ x[end][1], x[1][1] ] 
-        yat = [ x[end][2], x[1][2] ] 
+        xat = [x[end][1], x[1][1]]
+        yat = [x[end][2], x[1][2]]
         Main.plot!(p, xat, yat, label=:none, linewidth=2, color=:black)
     end
     if isnothing(markercolor)
@@ -142,21 +142,21 @@ function plot_mol!(
 end
 
 function plot_mol!(
-    p, 
-    x, 
-    n_atoms_per_molecule::Int; 
+    p,
+    x,
+    n_atoms_per_molecule::Int;
     cycle=false,
     markercolor=nothing
 )
     for i in 1:n_atoms_per_molecule:length(x)
         plot_mol!(
-            p, 
-            @view(x[i:i+n_atoms_per_molecule-1]); 
-            cycle=cycle, 
+            p,
+            @view(x[i:i+n_atoms_per_molecule-1]);
+            cycle=cycle,
             markercolor=markercolor
         )
         if isnothing(markercolor)
-            markercolor = p.series_list[end][:markercolor] 
+            markercolor = p.series_list[end][:markercolor]
         end
     end
     return p
@@ -164,9 +164,9 @@ end
 
 function plot_md!(
     p,
-    x, 
+    x,
     xn_atoms_per_molecule::Int,
-    y, 
+    y,
     yn_atoms_per_molecule::Int,
     md::List;
     x_cycle=false,
@@ -174,8 +174,8 @@ function plot_md!(
 )
     for pair in md
         !pair.within_cutoff && continue
-        xp = [ x[pair.i][1], y[pair.j][1] ]
-        yp = [ x[pair.i][2], y[pair.j][2] ]
+        xp = [x[pair.i][1], y[pair.j][1]]
+        yp = [x[pair.i][2], y[pair.j][2]]
         Main.plot!(p, xp, yp, label=:none, linewidth=2, color=:black, alpha=0.3)
     end
     plot_mol!(p, x, xn_atoms_per_molecule; cycle=x_cycle, markercolor=:red)

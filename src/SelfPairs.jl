@@ -14,26 +14,24 @@ end
 
 import Base.show
 function Base.show(io::IO, mime::MIME"text/plain", sys::SelfPairs)
-    print(io,"""
+    print(io,chomp("""
     SelfPairs system with:
 
     Number of atoms: $(length(sys.system.xpositions))
     Cutoff: $(sys.system._box.cutoff)
     unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]
-    Number of molecules: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))""")
+    Number of molecules: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))
+    """))
 end
 
 """
-
-```
-SelfPairs(;
-    xpositions::AbstractVector{<:SVector{N,T}},
-    cutoff::T,
-    unitcell::AbstractVecOrMat,
-    xn_atoms_per_molecule::Int,
-    parallel::Bool=true
-) where T<:Real
-```
+    SelfPairs(;
+        xpositions::AbstractVector{<:SVector{N,T}},
+        cutoff::T,
+        unitcell::AbstractVecOrMat,
+        xn_atoms_per_molecule::Int,
+        parallel::Bool=true
+    ) where T<:Real
 
 Initializes a particle system for the calculation of minimum distances
 within a single set of molecules. The shortest distance of each molecule
