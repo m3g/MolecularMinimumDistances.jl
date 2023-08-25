@@ -11,13 +11,9 @@ using .CellListMap.PeriodicSystems
 export MinimumDistance
 export SelfPairs, CrossPairs, AllPairs
 export minimum_distances, minimum_distances!
-export getlist
 
 """
-
-```
-MinimumDistance{T}
-```
+    MinimumDistance{T}
 
 The lists of minimum-distances are stored in arrays of type `Vector{MinimumDistance{T}}`. The index
 of this vector corresponds to the index of the molecule in the original array.
@@ -56,20 +52,18 @@ copy(md::MinimumDistance) = MinimumDistance(md.within_cutoff, md.i, md.j, md.d)
 
 import Base.show
 function Base.show(io::IO, mime::MIME"text/plain", md::MinimumDistance{T}) where T
-    print(io,"""
+    print(io,chomp("""
     $(md)
 
     Distance within cutoff, within_cutoff = $(md.within_cutoff)
     x atom of pair, i = $(md.i)
     y atom of pair, j = $(md.j)
-    Distance found, d = $(md.d)""")
+    Distance found, d = $(md.d)
+    """))
 end
 
 """
-
-```
-_mol_indices(i_atom,n_atoms_per_molecule) = (i_atom-1) ÷ n_atoms_per_molecule + 1
-```
+    _mol_indices(i_atom,n_atoms_per_molecule) = (i_atom-1) ÷ n_atoms_per_molecule + 1
 
 $(INTERNAL)
 
@@ -100,10 +94,7 @@ List{T} = Vector{<:MinimumDistance{T}}
 ListTuple{T} = Tuple{Vector{<:MinimumDistance{T}}, Vector{<:MinimumDistance{T}}} 
 
 """
-
-```
-init_list(x, mol_indices::F) where F<:Function
-```
+    init_list(x, mol_indices::F) where F<:Function
 
 $(INTERNAL)
 
@@ -114,9 +105,7 @@ molecules. `x` must be provided so that the type of variable of the coordinates 
 propagated to the distances, and `mol_indices` is the function that given an atomic index `i`
 returns the index of the molecule.
 
-```
-init_list(::Type{T}, number_of_molecules::Int) 
-```
+    init_list(::Type{T}, number_of_molecules::Int) 
 
 Given the type of the coordinates of the vector of atomic coordinates and the number of molecules,
 returns the initialized array of minimum distances. 
@@ -207,10 +196,7 @@ function reducer(l1::ListTuple, l2::ListTuple)
 end
 
 """
-
-```
-minimum_distances!(system)
-```
+    minimum_distances!(system)
 
 Function that computes the minimum distances for an initialized system,
 of `SelfPairs`, `CrossPairs`, or `AllPairs` types. 
@@ -263,18 +249,15 @@ function minimum_distances!(sys)
 end
 
 """
-
-```
-function minimum_distances(
-   xpositions=rand(SVector{3,Float64},10^5),
-   # or xpositions *and* ypositions (CrossPairs or AllPairs)
-   cutoff=0.1,
-   unitcell=[1,1,1],
-   xn_atoms_per_molecule=5
-   # or xn_atoms_per_molecule (CrossPairs)
-   # or xn_atoms_per_molecule *and* yn_atoms_per_molecule (AllPairs)
-)
-```
+    function minimum_distances(
+       xpositions::AbstractVector{<:SVector},
+       # or xpositions *and* ypositions (CrossPairs or AllPairs)
+       cutoff=0.1,
+       unitcell=[1,1,1],
+       xn_atoms_per_molecule=5
+       # or xn_atoms_per_molecule (CrossPairs)
+       # or xn_atoms_per_molecule *and* yn_atoms_per_molecule (AllPairs)
+    )
 
 This function computes directly the minimum distances in a set of particles. 
 Depending on the number of input position arrays provided and on the number
@@ -379,17 +362,17 @@ julia> lists[2]
 
 """
 function minimum_distances(;
-    xpositions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
-    ypositions::Union{Nothing,AbstractVector{<:SVector{N,T}}}=nothing,
-    cutoff::T,
+    xpositions=nothing,
+    ypositions=nothing,
+    cutoff::Real,
     unitcell::AbstractVecOrMat,
-    mol_indices::Union{Nothing,Function}=nothing,
-    xmol_indices::Union{Nothing,Function}=nothing,
-    ymol_indices::Union{Nothing,Function}=nothing,
+    mol_indices=nothing,
+    xmol_indices=nothing,
+    ymol_indices=nothing,
     xn_atoms_per_molecule::Union{Nothing,Int}=nothing,
     yn_atoms_per_molecule::Union{Nothing,Int}=nothing,
-    parallel=true
-) where {N,T}
+    parallel::Bool=true,
+)
     # SelfPairs
     if isnothing(ypositions)
         mol_indices = _get_mol_indices(mol_indices, xn_atoms_per_molecule)

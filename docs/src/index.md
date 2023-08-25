@@ -1,6 +1,6 @@
 # MolecularMinimumDistances
 
-This package computes the minimum distance between *molecules*, which are represented as arrays of coordinates in two or three dimensions. 
+[MolecularMinimumDistancs.jl](http://github.com/m3g/MolecularMinimumDistances.jl) computes the minimum distance between *molecules*, which are represented as arrays of coordinates in two or three dimensions. 
 
 To understand the utility and purpose of this package, consider the image below:
 

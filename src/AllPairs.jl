@@ -15,7 +15,7 @@ end
 
 import Base.show
 function Base.show(io::IO, mime::MIME"text/plain", sys::AllPairs)
-    print(io,"""
+    print(io,chomp("""
     AllPairs system with:
 
     Number of atoms of first set: $(length(sys.system.xpositions))
@@ -25,22 +25,20 @@ function Base.show(io::IO, mime::MIME"text/plain", sys::AllPairs)
     Number of molecules in second set: $(_number_of_molecules(sys.ymol_indices, sys.system.ypositions))
 
     Cutoff: $(sys.system._box.cutoff)
-    unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]""")
+    unitcell: [$(join(CellListMap._uround.(sys.system._box.unit_cell.matrix),", "))]
+    """))
 end
 
 """
-
-```
-AllPairs(;
-    xpositions::AbstractVector{<:SVector{N,T}},
-    ypositions::AbstractVector{<:SVector{N,T}},
-    cutoff::T,
-    unitcell::AbstractVecOrMat,
-    xn_atoms_per_molecule::Int,
-    yn_atoms_per_molecule::Int,
-    parallel::Bool=true
-) where T<:Real
-```
+    AllPairs(;
+        xpositions::AbstractVector{<:SVector{N,T}},
+        ypositions::AbstractVector{<:SVector{N,T}},
+        cutoff::T,
+        unitcell::AbstractVecOrMat,
+        xn_atoms_per_molecule::Int,
+        yn_atoms_per_molecule::Int,
+        parallel::Bool=true
+    ) where T<:Real
 
 Initializes a particle system for the calculation of minimum distances
 between one molecule and a set of other molecules. Returns a list 
@@ -111,15 +109,12 @@ function AllPairs(;
 end
 
 """
-
-```
-function update_list!(
-    i, j, d2,
-    mol_indices_i::Fi,
-    mol_indices_j::Fj,
-    lists::Tuple{T,T}
-) where {Fi<:Function, Fj<:Function, T<:AbstractVector{<:MinimumDistance}}
-```
+    function update_list!(
+        i, j, d2,
+        mol_indices_i::Fi,
+        mol_indices_j::Fj,
+        lists::Tuple{T,T}
+    ) where {Fi<:Function, Fj<:Function, T<:AbstractVector{<:MinimumDistance}}
 
 $(INTERNAL)
 

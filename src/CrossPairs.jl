@@ -15,28 +15,26 @@ CrossPairs(system::S, mol_indices::F) where {S,F} = CrossPairs{S,F,:minimum_dist
 
 import Base.show
 function Base.show(io::IO, mime::MIME"text/plain", sys::CrossPairs)
-    print(io,"""
+    print(io,chomp("""
     CrossPairs system with:
 
     Number of atoms of set x: $(length(sys.system.xpositions))
     Number of molecules in set x: $(_number_of_molecules(sys.mol_indices, sys.system.xpositions))
     Number of atoms of target structure y: $(length(sys.system.ypositions))
     Cutoff: $(sys.cutoff)
-    unitcell: [$(join(CellListMap._uround.(sys.system._box.input_unit_cell.matrix),", "))]""")
+    unitcell: [$(join(CellListMap._uround.(sys.system._box.input_unit_cell.matrix),", "))]
+    """))
 end
 
 """
-
-```
-CrossPairs(;
-    xpositions::AbstractVector{<:SVector{N,T}},
-    ypositions::AbstractVector{<:SVector{N,T}},
-    cutoff::T,
-    unitcell::AbstractVecOrMat,
-    xn_atoms_per_molecule::Int,
-    parallel::Bool=true
-) where T<:Real
-```
+    CrossPairs(;
+        xpositions::AbstractVector{<:SVector{N,T}},
+        ypositions::AbstractVector{<:SVector{N,T}},
+        cutoff::T,
+        unitcell::AbstractVecOrMat,
+        xn_atoms_per_molecule::Int,
+        parallel::Bool=true
+    ) where T<:Real
 
 Initializes a particle system for the calculation of minimum distances
 between one molecule and a set of other molecules. Returns a list 
