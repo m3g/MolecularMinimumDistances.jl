@@ -11,6 +11,7 @@ makedocs(
         "Basic use" => "basic.md",
         "Advanced use" => "advanced.md",
         "Reference" => "reference.md",
+        "Citation" => "citation.md",
     ],
 )
 deploydocs(
