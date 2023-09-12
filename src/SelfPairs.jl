@@ -26,7 +26,7 @@ end
 
 """
     SelfPairs(;
-        xpositions::AbstractVector{<:SVector{N,T}},
+        xpositions::AbstractVector{<:AbstractVector{T}},
         cutoff::T,
         unitcell::AbstractVecOrMat,
         xn_atoms_per_molecule::Int,
@@ -72,13 +72,13 @@ julia> minimum_distances!(sys)
 
 """
 function SelfPairs(;
-    xpositions::AbstractVector{<:SVector{N,T}},
+    xpositions::AbstractVector{<:AbstractVector{T}},
     cutoff::T,
     unitcell::AbstractVecOrMat,
     xn_atoms_per_molecule::Union{Nothing,Int}=nothing,
-    mol_indices::Union{Nothing,Function}=nothing,
-    parallel::Bool=true
-) where {N,T<:Real}
+    mol_indices::F1=nothing,
+    parallel::Bool=true,
+) where {T<:Real, F1<:Union{Nothing,Function}}
     mol_indices = _get_mol_indices(mol_indices, xn_atoms_per_molecule)
     system = PeriodicSystem(;
         xpositions=xpositions,

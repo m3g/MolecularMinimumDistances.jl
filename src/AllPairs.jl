@@ -31,8 +31,8 @@ end
 
 """
     AllPairs(;
-        xpositions::AbstractVector{<:SVector{N,T}},
-        ypositions::AbstractVector{<:SVector{N,T}},
+        xpositions::AbstractVector{<:AbstractVector{T}},
+        ypositions::AbstractVector{<:AbstractVector{T}},
         cutoff::T,
         unitcell::AbstractVecOrMat,
         xn_atoms_per_molecule::Int,
@@ -84,16 +84,16 @@ julia> minimum_distances!(sys)
 
 """
 function AllPairs(;
-    xpositions::AbstractVector{<:SVector{N,T}},
-    ypositions::AbstractVector{<:SVector{N,T}},
+    xpositions::AbstractVector{<:AbstractVector{T}},
+    ypositions::AbstractVector{<:AbstractVector{T}},
     cutoff::T,
     unitcell::AbstractVecOrMat,
     xn_atoms_per_molecule::Union{Nothing,Int}=nothing,
     yn_atoms_per_molecule::Union{Nothing,Int}=nothing,
-    xmol_indices::Union{Nothing,Function}=nothing,
-    ymol_indices::Union{Nothing,Function}=nothing,
+    xmol_indices::F1=nothing,
+    ymol_indices::F2=nothing,
     parallel::Bool=true
-) where {N,T<:Real}
+) where {T<:Real, F1<:Union{Nothing,Function}, F2<:Union{Nothing,Function}}
     xmol_indices = _get_mol_indices(xmol_indices, xn_atoms_per_molecule; flag="x")
     ymol_indices = _get_mol_indices(ymol_indices, yn_atoms_per_molecule; flag="y")
     system = PeriodicSystem(;

@@ -30,9 +30,12 @@ end
     # 
     # Single set of molecules
     #
-    x = [rand(SVector{3,Float64}) for _ in 1:135]
+    vecs = [ 
+        [rand(SVector{3,Float64}) for _ in 1:135],
+        [rand(3) for _ in 1:135],
+    ]
 
-    for parallel in (true, false),
+    for x in vecs, parallel in (true, false),
         unitcell in ([1, 1, 1], [1.0 0.2 0.0; 0.2 1.0 0.2; 0.0 0.0 1.0])
 
         cutoff = 0.2
@@ -61,10 +64,12 @@ end
     #
     # Disjoint sets: return only one list
     #
-    x = [rand(SVector{3,Float64}) for _ in 1:100]
-    y = [rand(SVector{3,Float64}) for _ in 1:90]
+    vecs = [
+        (x = [rand(SVector{3,Float64}) for _ in 1:100], y = [rand(SVector{3,Float64}) for _ in 1:90]),
+        (x = [rand(3) for _ in 1:100], y = [rand(3) for _ in 1:90])
+    ]
 
-    for parallel in (true, false),
+    for (x,y) in vecs, parallel in (true, false),
         unitcell in ([1, 1, 1], [1.0 0.2 0.0; 0.2 1.0 0.2; 0.0 0.0 1.0])
 
         cutoff = 0.2
@@ -92,10 +97,12 @@ end
     #
     # Disjoint sets of molecules
     #
-    x = [rand(SVector{3,Float64}) for _ in 1:100]
-    y = [rand(SVector{3,Float64}) for _ in 1:90]
+    vecs = [
+        (x = [rand(SVector{3,Float64}) for _ in 1:100], y = [rand(SVector{3,Float64}) for _ in 1:90]),
+        (x = [rand(3) for _ in 1:100], y = [rand(3) for _ in 1:90])
+    ]
 
-    for parallel in (true, false),
+    for (x,y) in vecs, parallel in (true, false),
         unitcell in ([1, 1, 1], [1.0 0.2 0.0; 0.2 1.0 0.2; 0.0 0.0 1.0])
 
         cutoff = 0.2
