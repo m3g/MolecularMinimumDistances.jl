@@ -2,6 +2,9 @@
 [![Tests](https://img.shields.io/badge/build-passing-green)](https://github.com/m3g/MolecularMinimumDistances.jl/actions)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
+# Deprecated. Go to [https://m3g.github.io/MolSimToolkit.jl/stable/molecular_minimum_distances/](https://m3g.github.io/MolSimToolkit.jl/stable/molecular_minimum_distances/) for the latest and maintained version.
+
+
 # MolecularMinimumDistances
 
 ## Documentation
